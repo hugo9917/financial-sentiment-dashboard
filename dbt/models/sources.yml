@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw data from S3"
+    tables:
+      - name: financial_data
+        description: "Raw financial data from Kinesis stream"
+        columns:
+          - name: _airbyte_ab_id
+            description: "Unique identifier for each record"
+            tests:
+              - unique
+              - not_null
+          - name: _airbyte_emitted_at
+            description: "Timestamp when the record was emitted"
+            tests:
+              - not_null
+          - name: _airbyte_data
+            description: "JSON data containing news or stock information"
+            tests:
+              - not_null 
