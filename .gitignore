@@ -86,6 +86,9 @@ terraform.tfstate.backup
 .aws/
 aws-credentials
 
+# dbt profiles (contains sensitive credentials)
+dbt/profiles.yml
+
 # Large files
 *.zip
 *.tar.gz

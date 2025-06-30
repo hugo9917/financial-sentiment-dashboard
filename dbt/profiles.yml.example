@@ -1,0 +1,28 @@
+financial_sentiment:
+  target: dev
+  outputs:
+    dev:
+      type: redshift
+      host: "{{ env_var('REDSHIFT_HOST') }}"
+      user: "{{ env_var('REDSHIFT_USER') }}"
+      password: "{{ env_var('REDSHIFT_PASSWORD') }}"
+      port: "{{ env_var('REDSHIFT_PORT', 5439) }}"
+      dbname: "{{ env_var('REDSHIFT_DBNAME', 'dev') }}"
+      schema: public
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+      retries: 1
+      
+    prod:
+      type: redshift
+      host: "{{ env_var('REDSHIFT_HOST') }}"
+      user: "{{ env_var('REDSHIFT_USER') }}"
+      password: "{{ env_var('REDSHIFT_PASSWORD') }}"
+      port: "{{ env_var('REDSHIFT_PORT', 5439) }}"
+      dbname: "{{ env_var('REDSHIFT_DBNAME', 'dev') }}"
+      schema: public
+      threads: 8
+      keepalives_idle: 0
+      connect_timeout: 10
+      retries: 3 
