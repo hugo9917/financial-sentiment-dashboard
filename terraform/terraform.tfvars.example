@@ -1,0 +1,12 @@
+# Variables sensibles y de configuración para Terraform
+# Copia este archivo como terraform.tfvars y configura tus valores
+
+redshift_master_password = "${REDSHIFT_MASTER_PASSWORD}"
+redshift_node_type = "ra3.xlplus"
+
+# Puedes agregar aquí otras variables si lo deseas, por ejemplo:
+# environment = "development"
+# aws_region = "us-east-1"
+# s3_bucket_name = "financial-sentiment-data-lake"
+# ...
+lambda_zip_path = "path/to/your/lambda.zip" 

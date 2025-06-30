@@ -10,7 +10,7 @@ import os
 DB_HOST = 'postgres'  # Nombre del servicio en docker-compose
 DB_NAME = 'financial_sentiment'
 DB_USER = 'postgres'
-DB_PASSWORD = 'password'
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 DB_PORT = 5432
 
 def test_connection():

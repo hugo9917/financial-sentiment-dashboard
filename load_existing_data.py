@@ -18,7 +18,7 @@ DB_CONFIG = {
     'host': 'localhost',  # Desde fuera del contenedor
     'database': 'financial_sentiment',
     'user': 'postgres',
-    'password': 'password',  # Debe coincidir con docker-compose
+    'password': os.getenv('DB_PASSWORD', 'password'),  # Debe coincidir con docker-compose
     'port': 5432
 }
 

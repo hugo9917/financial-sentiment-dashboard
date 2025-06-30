@@ -32,6 +32,7 @@ venv.bak/
 .env
 config.env
 *.env
+config.example.env
 
 # IDE
 .vscode/
@@ -88,6 +89,10 @@ aws-credentials
 
 # dbt profiles (contains sensitive credentials)
 dbt/profiles.yml
+
+# Terraform sensitive files
+terraform/terraform.tfvars
+*.tfvars
 
 # Large files
 *.zip

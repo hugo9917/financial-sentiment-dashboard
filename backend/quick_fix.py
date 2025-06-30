@@ -38,7 +38,7 @@ def get_db_connection():
 
 def fetch_alpha_vantage_news(symbol):
     """Obtener noticias reales de Alpha Vantage."""
-    api_key = "[REDACTED]"  # Tu clave de Alpha Vantage
+    api_key = os.getenv('ALPHA_VANTAGE_API_KEY')  # Tu clave de Alpha Vantage
     
     url = "https://www.alphavantage.co/query"
     params = {
