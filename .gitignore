@@ -72,4 +72,22 @@ frontend/build/
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfstate.backup
+.terraform.tfstate.lock.info
+
+# AWS
+.aws/
+aws-credentials
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+lambda.zip 
