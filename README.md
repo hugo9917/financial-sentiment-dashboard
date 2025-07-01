@@ -18,19 +18,35 @@ Un dashboard completo para analizar la correlación entre sentimiento de noticia
 - **Chart.js** para visualizaciones
 - **React Router** para navegación
 - **CSS3** con diseño moderno
+- **TypeScript** para type safety
+- **Vitest** para testing
+- **ESLint** para linting
 
 ### Backend
 - **FastAPI** (Python)
 - **PostgreSQL** como base de datos
 - **Redis** para caché
 - **psycopg2** para conexión a BD
+- **Pytest** para testing
+- **Black** y **isort** para formateo
+- **Flake8** para linting
+
+### Data Engineering
+- **DBT** para transformación de datos
+- **Apache Airflow** para orquestación
+- **Pandas** para manipulación de datos
 
 ### APIs Externas
 - **Alpha Vantage** para noticias y sentimiento
 - **Yahoo Finance** para precios de acciones
 
-### DevOps
+### DevOps & Observabilidad
 - **Docker** y Docker Compose
+- **Terraform** para Infraestructura como Código
+- **GitHub Actions** para CI/CD
+- **Prometheus** para métricas
+- **Grafana** para visualización
+- **AWS CloudWatch** para monitoreo
 - **Git** para control de versiones
 
 ## 📦 Instalación
@@ -41,6 +57,18 @@ Un dashboard completo para analizar la correlación entre sentimiento de noticia
 
 ### Pasos de Instalación
 
+#### Opción 1: Setup Automático (Recomendado)
+```bash
+# Clonar el repositorio
+git clone https://github.com/hugo9917/financial-sentiment-dashboard.git
+cd proyecto-puerta-grande
+
+# Ejecutar script de setup automático
+chmod +x scripts/setup.sh
+./scripts/setup.sh
+```
+
+#### Opción 2: Setup Manual
 1. **Clonar el repositorio**
 ```bash
 git clone https://github.com/hugo9917/financial-sentiment-dashboard.git
@@ -49,7 +77,8 @@ cd proyecto-puerta-grande
 
 2. **Configurar variables de entorno**
 ```bash
-# Copiar el archivo de ejemplo
+# Copiar archivos de configuración
+cp env.example .env
 cp config.example.env config.env
 
 # Editar config.env con tus API keys reales
@@ -62,12 +91,19 @@ cp config.example.env config.env
 
 4. **Ejecutar con Docker**
 ```bash
+# Para desarrollo completo con monitoreo
+docker-compose -f docker-compose.dev.yml up -d
+
+# Para versión simple
 docker-compose -f docker-compose-simple.yaml up -d
 ```
 
 5. **Acceder al dashboard**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
+- Grafana: http://localhost:3001 (admin/admin)
+- Prometheus: http://localhost:9090
+- Airflow: http://localhost:8080
 
 ## 🔑 Configuración de APIs
 
@@ -134,6 +170,10 @@ PROYECTO PUERTA GRANDE/
 
 ### Ejecutar en Modo Desarrollo
 ```bash
+# Usar Docker Compose (Recomendado)
+docker-compose -f docker-compose.dev.yml up -d
+
+# O ejecutar localmente
 # Backend
 cd backend
 pip install -r requirements.txt
@@ -145,12 +185,34 @@ npm install
 npm run dev
 ```
 
+### Testing
+```bash
+# Ejecutar todos los tests
+chmod +x scripts/run-tests.sh
+./scripts/run-tests.sh
+
+# O ejecutar tests específicos
+./scripts/run-tests.sh backend
+./scripts/run-tests.sh frontend
+./scripts/run-tests.sh dbt
+```
+
 ### Agregar Nuevas Acciones
 1. Editar `STOCK_SYMBOLS` en `backend/quick_fix.py`
 2. Ejecutar script de ingesta
 3. Los datos se actualizarán automáticamente
 
+### Monitoreo y Observabilidad
+- **Métricas en tiempo real**: http://localhost:3001 (Grafana)
+- **Logs estructurados**: Ver logs de Docker con `docker-compose logs -f`
+- **Health checks**: http://localhost:8000/health
+- **Métricas de la API**: http://localhost:8000/metrics
+
 ## 📝 API Endpoints
+
+### Health & Métricas
+- `GET /health` - Health check de la API
+- `GET /metrics` - Métricas de la aplicación
 
 ### Precios de Acciones
 - `GET /api/stock-prices/{symbol}` - Obtener precios por símbolo
@@ -164,6 +226,37 @@ npm run dev
 - `GET /api/correlation/` - Datos de correlación
 - `GET /api/correlation/{symbol}` - Correlación por símbolo
 
+### Sentimiento
+- `GET /api/sentiment/summary` - Resumen de sentimiento
+- `GET /api/sentiment/timeline` - Línea de tiempo de sentimiento
+- `GET /api/sentiment/summary_by_symbol` - Sentimiento por símbolo
+
+### Dashboard
+- `GET /api/dashboard/stats` - Estadísticas del dashboard
+
+## 🚀 CI/CD & DevOps
+
+### Pipeline de Integración Continua
+El proyecto incluye un pipeline completo de CI/CD con GitHub Actions:
+
+- **Tests automáticos** en cada push y pull request
+- **Linting y formateo** de código
+- **Análisis de seguridad** con Trivy
+- **Validación de Terraform**
+- **Tests de DBT**
+
+### Pipeline de Despliegue Continuo
+- **Despliegue automático** a producción en merge a main
+- **Infraestructura como Código** con Terraform
+- **Despliegue a AWS** (App Runner, Vercel)
+- **Notificaciones** a Slack
+
+### Monitoreo en Producción
+- **CloudWatch** para logs y métricas
+- **Grafana** para dashboards personalizados
+- **Prometheus** para métricas de sistema
+- **Health checks** automáticos
+
 ## 🤝 Contribuir
 
 1. Fork el proyecto
@@ -171,6 +264,12 @@ npm run dev
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abrir un Pull Request
+
+### Estándares de Código
+- **Python**: Black, isort, flake8
+- **JavaScript**: ESLint, Prettier
+- **Tests**: Cobertura mínima del 80%
+- **Commits**: Conventional Commits
 
 ## 📄 Licencia
 

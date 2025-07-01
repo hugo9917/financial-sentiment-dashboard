@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import psycopg2
@@ -7,11 +7,166 @@ from datetime import datetime, timedelta
 import os
 from typing import List, Optional
 import json
+import logging
+import time
+import uuid
+from contextlib import asynccontextmanager
+import boto3
+from botocore.exceptions import ClientError
+
+# Configurar logging estructurado
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('app.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Configurar CloudWatch para métricas (si estamos en AWS)
+cloudwatch = None
+try:
+    cloudwatch = boto3.client('cloudwatch', region_name=os.getenv('AWS_REGION', 'us-east-1'))
+except Exception as e:
+    logger.warning(f"CloudWatch no disponible: {e}")
+
+# Métricas de la aplicación
+class MetricsCollector:
+    def __init__(self):
+        self.request_count = 0
+        self.error_count = 0
+        self.db_connection_errors = 0
+        self.api_response_times = []
+    
+    def increment_request(self):
+        self.request_count += 1
+    
+    def increment_error(self):
+        self.error_count += 1
+    
+    def increment_db_error(self):
+        self.db_connection_errors += 1
+    
+    def record_response_time(self, duration):
+        self.api_response_times.append(duration)
+        if len(self.api_response_times) > 100:  # Mantener solo las últimas 100
+            self.api_response_times.pop(0)
+    
+    def get_avg_response_time(self):
+        if not self.api_response_times:
+            return 0
+        return sum(self.api_response_times) / len(self.api_response_times)
+    
+    def send_metrics_to_cloudwatch(self):
+        if not cloudwatch:
+            return
+        
+        try:
+            cloudwatch.put_metric_data(
+                Namespace='FinancialSentiment/API',
+                MetricData=[
+                    {
+                        'MetricName': 'RequestCount',
+                        'Value': self.request_count,
+                        'Unit': 'Count'
+                    },
+                    {
+                        'MetricName': 'ErrorCount',
+                        'Value': self.error_count,
+                        'Unit': 'Count'
+                    },
+                    {
+                        'MetricName': 'DBConnectionErrors',
+                        'Value': self.db_connection_errors,
+                        'Unit': 'Count'
+                    },
+                    {
+                        'MetricName': 'AverageResponseTime',
+                        'Value': self.get_avg_response_time(),
+                        'Unit': 'Milliseconds'
+                    }
+                ]
+            )
+            # Reset counters after sending
+            self.request_count = 0
+            self.error_count = 0
+            self.db_connection_errors = 0
+        except Exception as e:
+            logger.error(f"Error sending metrics to CloudWatch: {e}")
+
+metrics = MetricsCollector()
+
+# Middleware para logging y métricas
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    request_id = str(uuid.uuid4())
+    start_time = time.time()
+    
+    # Log request
+    logger.info(f"Request started", extra={
+        "request_id": request_id,
+        "method": request.method,
+        "url": str(request.url),
+        "client_ip": request.client.host if request.client else None,
+        "user_agent": request.headers.get("user-agent")
+    })
+    
+    try:
+        response = await call_next(request)
+        duration = (time.time() - start_time) * 1000  # Convert to milliseconds
+        
+        # Log response
+        logger.info(f"Request completed", extra={
+            "request_id": request_id,
+            "status_code": response.status_code,
+            "duration_ms": round(duration, 2)
+        })
+        
+        # Record metrics
+        metrics.increment_request()
+        metrics.record_response_time(duration)
+        
+        # Add request ID to response headers
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Response-Time"] = str(round(duration, 2))
+        
+        return response
+        
+    except Exception as e:
+        duration = (time.time() - start_time) * 1000
+        logger.error(f"Request failed", extra={
+            "request_id": request_id,
+            "error": str(e),
+            "duration_ms": round(duration, 2)
+        })
+        metrics.increment_error()
+        raise
+
+# Background task para enviar métricas cada 5 minutos
+import asyncio
+from fastapi import BackgroundTasks
+
+async def send_metrics_periodically():
+    while True:
+        await asyncio.sleep(300)  # 5 minutes
+        metrics.send_metrics_to_cloudwatch()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting Financial Sentiment API")
+    asyncio.create_task(send_metrics_periodically())
+    yield
+    # Shutdown
+    logger.info("Shutting down Financial Sentiment API")
 
 app = FastAPI(
     title="Financial Sentiment API", 
     description="API para análisis de sentimiento financiero y correlación con precios",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Configurar CORS para el frontend
@@ -36,9 +191,15 @@ def get_db_connection():
     """Crear conexión a PostgreSQL"""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
+        logger.debug("Database connection established successfully")
         return conn
     except Exception as e:
-        print(f"Error de conexión a BD: {str(e)}")
+        logger.error(f"Database connection error: {str(e)}", extra={
+            "error_type": "database_connection",
+            "db_host": DB_CONFIG.get('host'),
+            "db_name": DB_CONFIG.get('database')
+        })
+        metrics.increment_db_error()
         # Para desarrollo, devolver datos de ejemplo si no hay BD
         return None
 
@@ -57,11 +218,44 @@ async def health_check():
             cursor.execute("SELECT 1")
             cursor.close()
             conn.close()
-            return {"status": "healthy", "database": "connected"}
+            logger.info("Health check passed - database connected")
+            return {
+                "status": "healthy", 
+                "database": "connected",
+                "timestamp": datetime.now().isoformat(),
+                "version": "1.0.0"
+            }
         else:
-            return {"status": "healthy", "database": "disconnected", "message": "Using sample data"}
+            logger.warning("Health check - database disconnected, using sample data")
+            return {
+                "status": "healthy", 
+                "database": "disconnected", 
+                "message": "Using sample data",
+                "timestamp": datetime.now().isoformat(),
+                "version": "1.0.0"
+            }
     except Exception as e:
-        return {"status": "healthy", "database": "disconnected", "message": "Using sample data", "error": str(e)}
+        logger.error(f"Health check failed: {str(e)}")
+        return {
+            "status": "unhealthy", 
+            "database": "disconnected", 
+            "message": "Using sample data", 
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0"
+        }
+
+@app.get("/metrics")
+async def get_metrics():
+    """Obtener métricas de la aplicación"""
+    return {
+        "request_count": metrics.request_count,
+        "error_count": metrics.error_count,
+        "db_connection_errors": metrics.db_connection_errors,
+        "average_response_time_ms": round(metrics.get_avg_response_time(), 2),
+        "uptime": "TODO: Implement uptime tracking",
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/api/sentiment/summary")
 async def get_sentiment_summary(hours: int = 24):
