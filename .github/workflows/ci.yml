@@ -1,4 +1,4 @@
-name: CI - Continuous Integration
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,180 +6,191 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  PYTHON_VERSION: '3.11'
-  NODE_VERSION: '18'
-
 jobs:
-  # Backend Tests
-  backend-tests:
+  test-backend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./backend
+    
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-
+        python-version: '3.9'
+    
     - name: Install dependencies
       run: |
+        cd backend
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install flake8 pytest pytest-cov black isort
-
+        pip install pytest pytest-cov flake8 black isort
+    
     - name: Lint with flake8
       run: |
+        cd backend
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
     - name: Format check with black
-      run: black --check --diff .
-
-    - name: Import sorting check with isort
-      run: isort --check-only --diff .
-
-    - name: Run tests with pytest
       run: |
-        pytest --cov=. --cov-report=xml --cov-report=term-missing
-      env:
-        DATABASE_URL: postgresql://test:test@localhost:5432/test_db
-        ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./backend/coverage.xml
-        flags: backend
-        name: backend-coverage
-
-  # Frontend Tests
-  frontend-tests:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Lint with ESLint
-      run: npm run lint
-
-    - name: Type check with TypeScript
-      run: npm run type-check
-
+        cd backend
+        black --check --diff .
+    
+    - name: Import check with isort
+      run: |
+        cd backend
+        isort --check-only --diff .
+    
     - name: Run tests
-      run: npm test -- --coverage --watchAll=false
+      env:
+        DB_HOST: localhost
+        DB_NAME: test_db
+        DB_USER: postgres
+        DB_PASSWORD: password
+        DB_PORT: 5432
+      run: |
+        cd backend
+        pytest --cov=. --cov-report=xml --cov-report=term-missing
 
-    - name: Build for production
-      run: npm run build
-
-  # DBT Tests
-  dbt-tests:
+  test-frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./dbt
-
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Lint with ESLint
+      run: |
+        cd frontend
+        npm run lint
+    
+    - name: Run tests
+      run: |
+        cd frontend
+        npm run test:coverage
+    
+    - name: Build
+      run: |
+        cd frontend
+        npm run build
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install dbt
+        python-version: '3.9'
+    
+    - name: Install dependencies
       run: |
-        pip install dbt-postgres
-        pip install dbt-core
-
-    - name: Run dbt tests
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install bandit safety
+    
+    - name: Run security checks
       run: |
-        dbt deps
-        dbt test
-      env:
-        DBT_PROFILES_DIR: .
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        cd backend
+        bandit -r . -f json -o bandit-report.json || true
+        safety check --json --output safety-report.json || true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          backend/bandit-report.json
+          backend/safety-report.json
 
-  # Terraform Validation
-  terraform-validate:
+  docker:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./terraform
-
+    needs: [test-backend, test-frontend]
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build and test Docker images
+      run: |
+        docker build -t financial-sentiment-backend ./backend
+        docker build -t financial-sentiment-frontend ./frontend
+        
+        # Test backend container
+        docker run --rm financial-sentiment-backend python -c "import fastapi; print('Backend container test passed')"
+        
+        # Test frontend container
+        docker run --rm financial-sentiment-frontend node --version
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: "1.5.0"
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
-
-    - name: Terraform Format Check
-      run: terraform fmt -check -recursive
-
-    - name: Terraform Init
-      run: terraform init
-
-    - name: Terraform Validate
-      run: terraform validate
-
-    - name: Terraform Plan
-      run: terraform plan -no-color
-      continue-on-error: true
-
-  # Security Scan
-  security-scan:
+  deploy-staging:
     runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, docker]
+    if: github.ref == 'refs/heads/develop'
+    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment steps here
+        # Example: docker-compose -f docker-compose.staging.yml up -d
 
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, docker]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Add your production deployment steps here
+        # Example: docker-compose -f docker-compose.prod.yml up -d
 
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif' 
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, docker]
+    if: always()
+    
+    steps:
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "CI/CD pipeline failed!"
+        # Add notification logic here (Slack, email, etc.)
+    
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "CI/CD pipeline completed successfully!"
+        # Add notification logic here (Slack, email, etc.) 

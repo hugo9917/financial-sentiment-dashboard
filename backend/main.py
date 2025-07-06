@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException, Depends, Request
+from fastapi import FastAPI, HTTPException, Depends, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2PasswordRequestForm
 import psycopg2
 import pandas as pd
 from datetime import datetime, timedelta
@@ -13,6 +14,7 @@ import uuid
 from contextlib import asynccontextmanager
 import boto3
 from botocore.exceptions import ClientError
+from auth import authenticate_user, create_access_token, get_current_active_user, require_role
 
 # Configurar logging estructurado
 logging.basicConfig(
@@ -98,6 +100,31 @@ class MetricsCollector:
 
 metrics = MetricsCollector()
 
+# Background task para enviar métricas cada 5 minutos
+import asyncio
+from fastapi import BackgroundTasks
+
+async def send_metrics_periodically():
+    while True:
+        await asyncio.sleep(300)  # 5 minutes
+        metrics.send_metrics_to_cloudwatch()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Starting Financial Sentiment API")
+    asyncio.create_task(send_metrics_periodically())
+    yield
+    # Shutdown
+    logger.info("Shutting down Financial Sentiment API")
+
+app = FastAPI(
+    title="Financial Sentiment API", 
+    description="API para análisis de sentimiento financiero y correlación con precios",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
 # Middleware para logging y métricas
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -144,31 +171,6 @@ async def log_requests(request: Request, call_next):
         metrics.increment_error()
         raise
 
-# Background task para enviar métricas cada 5 minutos
-import asyncio
-from fastapi import BackgroundTasks
-
-async def send_metrics_periodically():
-    while True:
-        await asyncio.sleep(300)  # 5 minutes
-        metrics.send_metrics_to_cloudwatch()
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Starting Financial Sentiment API")
-    asyncio.create_task(send_metrics_periodically())
-    yield
-    # Shutdown
-    logger.info("Shutting down Financial Sentiment API")
-
-app = FastAPI(
-    title="Financial Sentiment API", 
-    description="API para análisis de sentimiento financiero y correlación con precios",
-    version="1.0.0",
-    lifespan=lifespan
-)
-
 # Configurar CORS para el frontend
 app.add_middleware(
     CORSMiddleware,
@@ -207,6 +209,55 @@ def get_db_connection():
 async def root():
     """Endpoint raíz"""
     return {"message": "Financial Sentiment API v1.0.0", "status": "running"}
+
+@app.post("/auth/login")
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Endpoint de login"""
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token_expires = timedelta(minutes=30)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    
+    logger.info(f"User {user['username']} logged in successfully")
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "username": user["username"],
+            "email": user["email"],
+            "full_name": user["full_name"],
+            "role": user["role"]
+        }
+    }
+
+@app.get("/auth/me")
+async def get_current_user_info(current_user = Depends(get_current_active_user)):
+    """Obtener información del usuario actual"""
+    return {
+        "username": current_user["username"],
+        "email": current_user["email"],
+        "full_name": current_user["full_name"],
+        "role": current_user["role"]
+    }
+
+@app.get("/auth/protected")
+async def protected_route(current_user = Depends(get_current_active_user)):
+    """Ruta protegida de ejemplo"""
+    return {"message": "This is a protected route", "user": current_user["username"]}
+
+@app.get("/auth/admin")
+async def admin_route(current_user = Depends(require_role("admin"))):
+    """Ruta solo para administradores"""
+    return {"message": "Admin only route", "user": current_user["username"]}
 
 @app.get("/health")
 async def health_check():
@@ -263,7 +314,7 @@ async def get_sentiment_summary(hours: int = 24):
     try:
         conn = get_db_connection()
         if not conn:
-            # Datos de ejemplo para desarrollo
+            logger.warning("No database connection available, returning sample data")
             return {
                 "summary": [
                     {"sentiment_category": "Positive", "count": 45, "avg_score": 0.65, "avg_subjectivity": 0.45},
@@ -274,27 +325,58 @@ async def get_sentiment_summary(hours: int = 24):
                 "time_range_hours": hours
             }
         
+        # Query mejorada para obtener datos reales
         query = """
         SELECT 
-            sentiment_category,
+            CASE 
+                WHEN avg_sentiment_score > 0.1 THEN 'Positive'
+                WHEN avg_sentiment_score < -0.1 THEN 'Negative'
+                ELSE 'Neutral'
+            END as sentiment_category,
             COUNT(*) as count,
             AVG(avg_sentiment_score) as avg_score,
             AVG(avg_sentiment_subjectivity) as avg_subjectivity
         FROM financial_sentiment_correlation 
-        WHERE hour >= NOW() - INTERVAL '%s hours'
-        GROUP BY sentiment_category
+        WHERE hour >= NOW() - INTERVAL %s hours
+            AND avg_sentiment_score IS NOT NULL
+        GROUP BY 
+            CASE 
+                WHEN avg_sentiment_score > 0.1 THEN 'Positive'
+                WHEN avg_sentiment_score < -0.1 THEN 'Negative'
+                ELSE 'Neutral'
+            END
         ORDER BY count DESC
         """
         
-        df = pd.read_sql_query(query, conn, params=[hours])
+        cursor = conn.cursor()
+        cursor.execute(query, (hours,))
+        results = cursor.fetchall()
+        
+        summary = []
+        total_records = 0
+        
+        for row in results:
+            sentiment_category, count, avg_score, avg_subjectivity = row
+            summary.append({
+                "sentiment_category": sentiment_category,
+                "count": count,
+                "avg_score": float(avg_score) if avg_score else 0,
+                "avg_subjectivity": float(avg_subjectivity) if avg_subjectivity else 0
+            })
+            total_records += count
+        
+        cursor.close()
         conn.close()
         
+        logger.info(f"Retrieved sentiment summary: {len(summary)} categories, {total_records} total records")
+        
         return {
-            "summary": df.to_dict('records'),
-            "total_records": len(df),
+            "summary": summary,
+            "total_records": total_records,
             "time_range_hours": hours
         }
     except Exception as e:
+        logger.error(f"Error in sentiment summary: {str(e)}")
         # Datos de ejemplo en caso de error
         return {
             "summary": [
@@ -468,7 +550,7 @@ async def get_latest_news(limit: int = 10):
     try:
         conn = get_db_connection()
         if not conn:
-            # Datos de ejemplo para desarrollo
+            logger.warning("No database connection available, returning sample data")
             return {
                 "news": [
                     {
@@ -493,28 +575,52 @@ async def get_latest_news(limit: int = 10):
                 "total_count": 2
             }
         
+        # Query mejorada para obtener noticias reales
         query = """
         SELECT 
             title,
             description,
             url,
             published_at,
-            source as source_name,
+            COALESCE(source_name, 'Unknown') as source_name,
             sentiment_score,
-            sentiment_subjectivity
+            sentiment_subjectivity,
+            symbol
         FROM news_with_sentiment 
+        WHERE published_at IS NOT NULL
         ORDER BY published_at DESC 
         LIMIT %s
         """
         
-        df = pd.read_sql_query(query, conn, params=[limit])
+        cursor = conn.cursor()
+        cursor.execute(query, (limit,))
+        results = cursor.fetchall()
+        
+        news = []
+        for row in results:
+            title, description, url, published_at, source_name, sentiment_score, sentiment_subjectivity, symbol = row
+            news.append({
+                "title": title or "Sin título",
+                "description": description or "Sin descripción",
+                "url": url or "#",
+                "published_at": published_at.isoformat() if published_at else None,
+                "source_name": source_name,
+                "sentiment_score": float(sentiment_score) if sentiment_score else 0,
+                "sentiment_subjectivity": float(sentiment_subjectivity) if sentiment_subjectivity else 0,
+                "symbol": symbol
+            })
+        
+        cursor.close()
         conn.close()
         
+        logger.info(f"Retrieved {len(news)} latest news articles")
+        
         return {
-            "news": df.to_dict('records'),
-            "total_count": len(df)
+            "news": news,
+            "total_count": len(news)
         }
     except Exception as e:
+        logger.error(f"Error in latest news: {str(e)}")
         # Datos de ejemplo en caso de error
         return {
             "news": [

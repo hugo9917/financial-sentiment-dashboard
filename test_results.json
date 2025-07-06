@@ -1,0 +1,109 @@
+{
+  "tests": [
+    {
+      "name": "Health Check",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A898D0>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:07.262071"
+    },
+    {
+      "name": "Database Connection",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A8AD10>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:11.314207"
+    },
+    {
+      "name": "Authentication",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /auth/login (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A8BF10>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:15.390184"
+    },
+    {
+      "name": "API Sentiment Summary",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/sentiment/summary (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A91350>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:19.458022"
+    },
+    {
+      "name": "API Sentiment Timeline",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/sentiment/timeline (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A92650>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:23.532187"
+    },
+    {
+      "name": "API Correlation Analysis",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/correlation/analysis (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A88E50>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:27.579742"
+    },
+    {
+      "name": "API Stock Prices",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/stocks/prices (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A89E90>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:31.633484"
+    },
+    {
+      "name": "API Latest News",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/news/latest (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A91350>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:35.732782"
+    },
+    {
+      "name": "API Dashboard Stats",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/dashboard/stats (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A901D0>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:39.785048"
+    },
+    {
+      "name": "API Sentiment by Symbol",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/sentiment/summary_by_symbol (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A93C10>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:43.879590"
+    },
+    {
+      "name": "API Stock Prices by Symbol",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/stocks/prices_by_symbol (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A9CF50>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:47.923377"
+    },
+    {
+      "name": "Metrics Endpoint",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /metrics (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347A9E350>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:51.966243"
+    },
+    {
+      "name": "Frontend Accessibility",
+      "success": false,
+      "details": "Frontend not accessible: HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347AAC650>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:16:55.984186"
+    },
+    {
+      "name": "Data Quality",
+      "success": false,
+      "details": "HTTPConnectionPool(host='localhost', port=8000): Max retries exceeded with url: /api/sentiment/summary (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000021347AAD650>: Failed to establish a new connection: [WinError 10061] No se puede establecer una conexi\u00f3n ya que el equipo de destino deneg\u00f3 expresamente dicha conexi\u00f3n'))",
+      "response_time": 0,
+      "timestamp": "2025-07-05T23:17:00.047362"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "passed": 0,
+    "failed": 7,
+    "start_time": "2025-07-05T23:16:03.217539",
+    "end_time": "2025-07-05T23:17:00.049360"
+  }
+}

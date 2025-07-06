@@ -1,112 +1,104 @@
-# 🔒 Guía de Seguridad
+# Security Policy
 
-## Credenciales y Variables de Entorno
+## Supported Versions
 
-### Archivos Sensibles
-Los siguientes archivos contienen información sensible y NO deben subirse a Git:
+Use this section to tell people about which versions of your project are currently being supported with security updates.
 
-- `config.env` - Variables de entorno con credenciales reales
-- `dbt/profiles.yml` - Configuración de dbt con credenciales de base de datos
-- `terraform/terraform.tfvars` - Variables de Terraform con credenciales
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.0.x   | :white_check_mark: |
+| 0.9.x   | :x:                |
+| 0.8.x   | :x:                |
 
-### Configuración Segura
+## Reporting a Vulnerability
 
-#### 1. Variables de Entorno
-Copia el archivo de ejemplo y configura tus credenciales:
-```bash
-cp config.example.env config.env
-cp dbt/profiles.yml.example dbt/profiles.yml
-cp terraform/terraform.tfvars.example terraform/terraform.tfvars
-```
+We take security vulnerabilities seriously. If you discover a security vulnerability, please follow these steps:
 
-#### 2. Configurar Variables de Entorno
-Edita `config.env` con tus credenciales reales:
-```bash
-# API Keys
-NEWS_API_KEY=tu_api_key_real
-ALPHA_VANTAGE_API_KEY=tu_api_key_real
+### 1. **DO NOT** create a public GitHub issue
+Security vulnerabilities should be reported privately to avoid potential exploitation.
 
-# Base de datos
-DB_PASSWORD=tu_password_seguro
+### 2. Email us directly
+Send an email to: [security@example.com](mailto:security@example.com)
 
-# Redshift
-REDSHIFT_HOST=tu_cluster_endpoint
-REDSHIFT_USER=tu_usuario
-REDSHIFT_PASSWORD=tu_password_seguro
-REDSHIFT_MASTER_PASSWORD=tu_master_password_seguro
-```
+### 3. Include the following information:
+- **Description**: Clear description of the vulnerability
+- **Steps to reproduce**: Detailed steps to reproduce the issue
+- **Impact**: Potential impact of the vulnerability
+- **Suggested fix**: If you have a suggested fix (optional)
+- **Environment**: OS, browser, versions, etc.
 
-#### 3. Configurar Terraform
-Edita `terraform/terraform.tfvars`:
-```bash
-redshift_master_password = "${REDSHIFT_MASTER_PASSWORD}"
-```
+### 4. What happens next:
+- We will acknowledge receipt within 48 hours
+- We will investigate and provide updates
+- We will work on a fix and coordinate disclosure
+- We will credit you in the security advisory (if desired)
 
-### API Keys Expuestas
-Si accidentalmente subiste API keys a Git:
+## Security Best Practices
 
-1. **Revoca inmediatamente las API keys** en los servicios correspondientes
-2. **Genera nuevas API keys**
-3. **Actualiza tu archivo config.env** con las nuevas keys
-4. **Usa git filter-branch** para eliminar las keys del historial
+### For Contributors
+- Never commit API keys or sensitive data
+- Use environment variables for configuration
+- Validate all user inputs
+- Follow OWASP security guidelines
+- Keep dependencies updated
+- Use HTTPS in production
 
-### Comandos de Limpieza de Git
+### For Users
+- Keep your API keys secure
+- Use strong passwords
+- Enable 2FA when available
+- Report suspicious activity
+- Keep your system updated
 
-#### Eliminar archivo del historial:
-```bash
-git filter-branch --force --index-filter "git rm --cached --ignore-unmatch archivo_sensible" --prune-empty --tag-name-filter cat -- --all
-```
+## Security Features
 
-#### Forzar push después de limpieza:
-```bash
-git push origin main --force
-```
+### Authentication
+- JWT-based authentication
+- Role-based access control
+- Secure password hashing (bcrypt)
+- Token expiration and refresh
 
-### Verificación de Seguridad
+### Data Protection
+- Input validation and sanitization
+- SQL injection prevention
+- XSS protection
+- CSRF protection
 
-#### Buscar credenciales hardcodeadas:
-```bash
-grep -r "password\|secret\|key\|token" . --exclude-dir=venv --exclude-dir=node_modules
-```
+### API Security
+- Rate limiting
+- Request validation
+- Error handling without information disclosure
+- HTTPS enforcement
 
-#### Verificar archivos en .gitignore:
-```bash
-git check-ignore config.env dbt/profiles.yml terraform/terraform.tfvars
-```
+## Known Vulnerabilities
 
-### Mejores Prácticas
+None currently known. All reported vulnerabilities will be listed here once resolved.
 
-1. **Nunca hardcodees credenciales** en el código
-2. **Usa variables de entorno** para todas las credenciales
-3. **Mantén archivos de ejemplo** sin credenciales reales
-4. **Revisa regularmente** el historial de Git por credenciales
-5. **Usa herramientas de seguridad** como pre-commit hooks
-6. **Rota las credenciales** regularmente
+## Security Updates
 
-### Servicios de API
+Security updates will be released as patch versions (e.g., 1.0.1, 1.0.2) and will be clearly marked in the changelog.
 
-#### Alpha Vantage
-- URL: https://www.alphavantage.co/support/#api-key
-- Gratuito: 500 requests/day
-- Revocar key si se expone
+## Responsible Disclosure
 
-#### News API
-- URL: https://newsapi.org/register
-- Gratuito: 100 requests/day
-- Revocar key si se expone
+We follow responsible disclosure practices:
+- We will not publicly disclose vulnerabilities until a fix is available
+- We will credit security researchers who report valid vulnerabilities
+- We will work with reporters to coordinate disclosure timing
+- We will provide clear timelines for fixes
 
-### Monitoreo de Seguridad
+## Security Team
 
-Considera implementar:
-- Pre-commit hooks para detectar credenciales
-- Escaneo automático de secretos
-- Rotación automática de credenciales
-- Alertas de seguridad
+- **Security Lead**: [security@example.com](mailto:security@example.com)
+- **Technical Lead**: [tech@example.com](mailto:tech@example.com)
+- **Project Maintainer**: [maintainer@example.com](mailto:maintainer@example.com)
 
-### Contacto de Emergencia
+## Security Resources
 
-Si encuentras un problema de seguridad:
-1. Revoca inmediatamente las credenciales afectadas
-2. Genera nuevas credenciales
-3. Actualiza la documentación
-4. Notifica al equipo 
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [CVE Database](https://cve.mitre.org/)
+- [GitHub Security Advisories](https://github.com/security/advisories)
+- [NIST Cybersecurity Framework](https://www.nist.gov/cyberframework)
+
+---
+
+**Thank you for helping keep our project secure!** 🔒 

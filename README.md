@@ -1,179 +1,196 @@
-# 📊 Dashboard de Análisis Financiero - Proyecto Puerta Grande
+# 📊 Financial Sentiment Analysis Dashboard - Puerta Grande Project
 
-Un dashboard completo para analizar la correlación entre sentimiento de noticias financieras y precios de acciones, construido con tecnologías modernas.
+A comprehensive dashboard for analyzing the correlation between financial news sentiment and stock prices, built with modern technologies.
 
-## 🚀 Características
+## 🚀 Features
 
-- **📈 Datos Reales**: Precios de acciones de Yahoo Finance
-- **📰 Noticias con Sentimiento**: Análisis automático de Alpha Vantage
-- **📊 Visualizaciones Interactivas**: Gráficos de correlación y evolución temporal
-- **🏗️ Arquitectura Moderna**: React + FastAPI + PostgreSQL
-- **🐳 Containerizado**: Docker para fácil despliegue
-- **📱 Responsive**: Interfaz adaptada a móviles y desktop
+- **📈 Real Data**: Stock prices from Yahoo Finance
+- **📰 News with Sentiment**: Automatic analysis from Alpha Vantage
+- **📊 Interactive Visualizations**: Correlation charts and temporal evolution
+- **🔐 Authentication System**: JWT with user and admin roles
+- **📰 Complete News Page**: Filters, search and sentiment analysis
+- **🏗️ Modern Architecture**: React + FastAPI + PostgreSQL
+- **🐳 Containerized**: Docker for easy deployment
+- **📱 Responsive**: Interface adapted for mobile and desktop
+- **🧪 Complete Tests**: Test coverage for frontend and backend
 
-## 🛠️ Tecnologías Utilizadas
+## 🛠️ Technologies Used
 
 ### Frontend
-- **React 18** con Vite
-- **Chart.js** para visualizaciones
-- **React Router** para navegación
-- **CSS3** con diseño moderno
-- **TypeScript** para type safety
-- **Vitest** para testing
-- **ESLint** para linting
+- **React 18** with Vite
+- **Chart.js** for visualizations
+- **React Router** for navigation
+- **CSS3** with modern design
+- **TypeScript** for type safety
+- **Vitest** for testing
+- **ESLint** for linting
 
 ### Backend
 - **FastAPI** (Python)
-- **PostgreSQL** como base de datos
-- **Redis** para caché
-- **psycopg2** para conexión a BD
-- **Pytest** para testing
-- **Black** y **isort** para formateo
-- **Flake8** para linting
+- **PostgreSQL** as database
+- **Redis** for caching
+- **psycopg2** for DB connection
+- **Pytest** for testing
+- **Black** and **isort** for formatting
+- **Flake8** for linting
 
 ### Data Engineering
-- **DBT** para transformación de datos
-- **Apache Airflow** para orquestación
-- **Pandas** para manipulación de datos
+- **DBT** for data transformation
+- **Apache Airflow** for orchestration
+- **Pandas** for data manipulation
 
-### APIs Externas
-- **Alpha Vantage** para noticias y sentimiento
-- **Yahoo Finance** para precios de acciones
+### External APIs
+- **Alpha Vantage** for news and sentiment
+- **Yahoo Finance** for stock prices
 
-### DevOps & Observabilidad
-- **Docker** y Docker Compose
-- **Terraform** para Infraestructura como Código
-- **GitHub Actions** para CI/CD
-- **Prometheus** para métricas
-- **Grafana** para visualización
-- **AWS CloudWatch** para monitoreo
-- **Git** para control de versiones
+### DevOps & Observability
+- **Docker** and Docker Compose
+- **Terraform** for Infrastructure as Code
+- **GitHub Actions** for CI/CD
+- **Prometheus** for metrics
+- **Grafana** for visualization
+- **AWS CloudWatch** for monitoring
+- **Git** for version control
 
-## 📦 Instalación
+## 📦 Installation
 
-### Prerrequisitos
-- Docker y Docker Compose
+### Prerequisites
+- Docker and Docker Compose
 - Git
 
-### Pasos de Instalación
+### Installation Steps
 
-#### Opción 1: Setup Automático (Recomendado)
+#### Option 1: Automatic Setup (Recommended)
 ```bash
-# Clonar el repositorio
+# Clone the repository
 git clone https://github.com/hugo9917/financial-sentiment-dashboard.git
 cd proyecto-puerta-grande
 
-# Ejecutar script de setup automático
+# Run automatic setup script
 chmod +x scripts/setup.sh
 ./scripts/setup.sh
 ```
 
-#### Opción 2: Setup Manual
-1. **Clonar el repositorio**
+#### Option 2: Manual Setup
+1. **Clone the repository**
 ```bash
 git clone https://github.com/hugo9917/financial-sentiment-dashboard.git
 cd proyecto-puerta-grande
 ```
 
-2. **Configurar variables de entorno**
+2. **Configure environment variables**
 ```bash
-# Copiar archivos de configuración
+# Copy configuration files
 cp env.example .env
 cp config.example.env config.env
 
-# Editar config.env con tus API keys reales
-# IMPORTANTE: Nunca subas config.env a GitHub
+# Edit config.env with your real API keys
+# IMPORTANT: Never commit config.env to GitHub
 ```
 
-3. **Obtener API Keys**
-   - **Alpha Vantage**: [Registrarse aquí](https://www.alphavantage.co/support/#api-key) (gratuito)
-   - **NewsAPI** (opcional): [Registrarse aquí](https://newsapi.org/register) (gratuito)
+3. **Get API Keys**
+   - **Alpha Vantage**: [Register here](https://www.alphavantage.co/support/#api-key) (free)
+   - **NewsAPI** (optional): [Register here](https://newsapi.org/register) (free)
 
-4. **Ejecutar con Docker**
+4. **Run with Docker**
 ```bash
-# Para desarrollo completo con monitoreo
+# For complete development with monitoring
 docker-compose -f docker-compose.dev.yml up -d
 
-# Para versión simple
+# For simple version
 docker-compose -f docker-compose-simple.yaml up -d
 ```
 
-5. **Acceder al dashboard**
+5. **Access the dashboard**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
 - Grafana: http://localhost:3001 (admin/admin)
 - Prometheus: http://localhost:9090
 - Airflow: http://localhost:8080
 
-## 🔑 Configuración de APIs
+## 🔑 API Configuration
 
 ### Alpha Vantage
-1. Registrarse en [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
-2. Obtener API key gratuita
-3. Agregar a `config.env`:
+1. Register at [Alpha Vantage](https://www.alphavantage.co/support/#api-key)
+2. Get free API key
+3. Add to `config.env`:
 ```
-ALPHA_VANTAGE_API_KEY=tu_api_key_aqui
+ALPHA_VANTAGE_API_KEY=your_api_key_here
 ```
 
-## 📊 Estructura del Proyecto
+## 📊 Project Structure
 
 ```
 PROYECTO PUERTA GRANDE/
-├── frontend/                 # Aplicación React
+├── frontend/                 # React application
 │   ├── src/
-│   │   ├── components/      # Componentes reutilizables
-│   │   ├── pages/          # Páginas principales
-│   │   └── App.jsx         # Componente principal
-├── backend/                 # API FastAPI
-│   ├── main.py             # Servidor principal
-│   ├── ingestion_main.py   # Lógica de ingesta de datos
-│   └── requirements.txt    # Dependencias Python
-├── docker-compose-simple.yaml  # Configuración Docker
-├── init-db.sql             # Script de inicialización de BD
-└── README.md               # Este archivo
+│   │   ├── components/      # Reusable components
+│   │   ├── pages/          # Main pages
+│   │   └── App.jsx         # Main component
+├── backend/                 # FastAPI backend
+│   ├── main.py             # Main server
+│   ├── auth.py             # Authentication module
+│   ├── ingestion_main.py   # Data ingestion logic
+│   └── requirements.txt    # Python dependencies
+├── docker-compose-simple.yaml  # Docker configuration
+├── init-db.sql             # Database initialization script
+└── README.md               # This file
 ```
 
-## 🎯 Funcionalidades
+## 🎯 Functionality
 
-### Dashboard Principal
-- **Evolución de Precios**: Gráficos de líneas con datos OHLCV
-- **Resumen Estadístico**: Métricas clave de cada acción
-- **Filtros por Símbolo**: Selección de empresas específicas
+### Main Dashboard
+- **Price Evolution**: Line charts with OHLCV data
+- **Statistical Summary**: Key metrics for each stock
+- **Symbol Filters**: Selection of specific companies
 
-### Análisis de Correlación
-- **Gráfico de Dispersión**: Sentimiento vs Precio
-- **Tabla Resumen**: Estadísticas por categoría de sentimiento
-- **Análisis Temporal**: Evolución de correlaciones
+### Correlation Analysis
+- **Scatter Plot**: Sentiment vs Price
+- **Summary Table**: Statistics by sentiment category
+- **Temporal Analysis**: Correlation evolution
 
-### Datos en Tiempo Real
-- **Actualización Automática**: Nuevos datos cada hora
-- **Noticias Recientes**: Últimas noticias con análisis de sentimiento
-- **Precios Actualizados**: Datos de mercado en tiempo real
+### Authentication System
+- **Login/Logout**: Modern authentication interface
+- **User Roles**: Admin and regular user
+- **Route Protection**: JWT-protected endpoints
+- **Session Management**: Secure tokens with expiration
 
-## 📈 Datos Incluidos
+### Complete News Page
+- **Advanced Filters**: By source, sentiment and text search
+- **Sentiment Analysis**: Score and category visualization
+- **Interactive Charts**: Temporal sentiment evolution
+- **Real-time Statistics**: News and sentiment metrics
+- **Responsive Design**: Optimized for mobile and desktop
 
-### Acciones Cubiertas
+### Real-time Data
+- **Automatic Updates**: New data every hour
+- **Recent News**: Latest news with sentiment analysis
+- **Updated Prices**: Real-time market data
+
+## 📈 Included Data
+
+### Covered Stocks
 - **AAPL** (Apple)
 - **GOOGL** (Google)
 - **MSFT** (Microsoft)
 - **TSLA** (Tesla)
 - **META** (Meta/Facebook)
-- Y más...
+- And more...
 
-### Tipos de Datos
-- **Precios OHLCV**: Open, High, Low, Close, Volume
-- **Noticias**: Título, descripción, fuente, fecha
-- **Sentimiento**: Score numérico y categoría
-- **Correlaciones**: Análisis temporal de relaciones
+### Data Types
+- **OHLCV Prices**: Open, High, Low, Close, Volume
+- **News**: Title, description, source, date
+- **Sentiment**: Numerical score and category
+- **Correlations**: Temporal relationship analysis
 
-## 🔧 Desarrollo
+## 🔧 Development
 
-### Ejecutar en Modo Desarrollo
+### Run in Development Mode
 ```bash
-# Usar Docker Compose (Recomendado)
+# Use Docker Compose (Recommended)
 docker-compose -f docker-compose.dev.yml up -d
 
-# O ejecutar localmente
+# Or run locally
 # Backend
 cd backend
 pip install -r requirements.txt
@@ -187,110 +204,121 @@ npm run dev
 
 ### Testing
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 chmod +x scripts/run-tests.sh
 ./scripts/run-tests.sh
 
-# O ejecutar tests específicos
+# Or run specific tests
 ./scripts/run-tests.sh backend
 ./scripts/run-tests.sh frontend
 ./scripts/run-tests.sh dbt
+
+# Test new implementations
+python test_implementation.py
 ```
 
-### Agregar Nuevas Acciones
-1. Editar `STOCK_SYMBOLS` en `backend/quick_fix.py`
-2. Ejecutar script de ingesta
-3. Los datos se actualizarán automáticamente
+### Test New Features
 
-### Monitoreo y Observabilidad
-- **Métricas en tiempo real**: http://localhost:3001 (Grafana)
-- **Logs estructurados**: Ver logs de Docker con `docker-compose logs -f`
-- **Health checks**: http://localhost:8000/health
-- **Métricas de la API**: http://localhost:8000/metrics
+#### Authentication
+```bash
+# Available test users:
+# Admin: admin / admin123
+# User: user / user123
 
-## 📝 API Endpoints
+# Test authentication endpoints
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=admin123"
+```
 
-### Health & Métricas
-- `GET /health` - Health check de la API
-- `GET /metrics` - Métricas de la aplicación
+#### News Page
+- Access http://localhost:3000/news
+- Test filters by sentiment, source and search
+- Verify temporal evolution charts
+- Check real-time statistics
 
-### Precios de Acciones
-- `GET /api/stock-prices/{symbol}` - Obtener precios por símbolo
-- `GET /api/stock-prices/` - Listar todos los precios
+### Add New Stocks
+```bash
+# Add new stock to the system
+# 1. Update the stock list in the ingestion script
+# 2. Restart the data ingestion process
+# 3. The new data will appear in the dashboard
+```
 
-### Noticias
-- `GET /api/news/{symbol}` - Noticias por símbolo
-- `GET /api/news/` - Todas las noticias
+## 📊 API Endpoints
 
-### Correlaciones
-- `GET /api/correlation/` - Datos de correlación
-- `GET /api/correlation/{symbol}` - Correlación por símbolo
+### Public Endpoints
+- `GET /` - API information
+- `GET /health` - Health check
+- `GET /metrics` - Application metrics
 
-### Sentimiento
-- `GET /api/sentiment/summary` - Resumen de sentimiento
-- `GET /api/sentiment/timeline` - Línea de tiempo de sentimiento
-- `GET /api/sentiment/summary_by_symbol` - Sentimiento por símbolo
+### Authentication Endpoints
+- `POST /auth/login` - User login
+- `GET /auth/me` - Get current user info
+- `GET /auth/protected` - Protected route example
+- `GET /auth/admin` - Admin-only route
 
-### Dashboard
-- `GET /api/dashboard/stats` - Estadísticas del dashboard
+### Data Endpoints
+- `GET /api/sentiment/summary` - Sentiment summary
+- `GET /api/sentiment/timeline` - Sentiment timeline
+- `GET /api/correlation/analysis` - Correlation analysis
+- `GET /api/stocks/prices` - Stock prices
+- `GET /api/news/latest` - Latest news
+- `GET /api/dashboard/stats` - Dashboard statistics
 
-## 🚀 CI/CD & DevOps
+## 🚀 Deployment
 
-### Pipeline de Integración Continua
-El proyecto incluye un pipeline completo de CI/CD con GitHub Actions:
+### Production Deployment
+```bash
+# Build and deploy with Docker
+docker-compose -f docker-compose.prod.yml up -d
 
-- **Tests automáticos** en cada push y pull request
-- **Linting y formateo** de código
-- **Análisis de seguridad** con Trivy
-- **Validación de Terraform**
-- **Tests de DBT**
+# Or deploy to cloud platforms
+# AWS, Google Cloud, Azure, etc.
+```
 
-### Pipeline de Despliegue Continuo
-- **Despliegue automático** a producción en merge a main
-- **Infraestructura como Código** con Terraform
-- **Despliegue a AWS** (App Runner, Vercel)
-- **Notificaciones** a Slack
+### Environment Variables
+```bash
+# Required environment variables
+DB_HOST=postgres
+DB_NAME=financial_sentiment
+DB_USER=postgres
+DB_PASSWORD=password
+DB_PORT=5432
 
-### Monitoreo en Producción
-- **CloudWatch** para logs y métricas
-- **Grafana** para dashboards personalizados
-- **Prometheus** para métricas de sistema
-- **Health checks** automáticos
+# Optional
+SECRET_KEY=your-secret-key-here
+AWS_REGION=us-east-1
+```
 
-## 🤝 Contribuir
+## 🤝 Contributing
 
-1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Estándares de Código
-- **Python**: Black, isort, flake8
-- **JavaScript**: ESLint, Prettier
-- **Tests**: Cobertura mínima del 80%
-- **Commits**: Conventional Commits
+## 📝 License
 
-## 📄 Licencia
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+## 🙏 Acknowledgments
 
-## 👨‍💻 Autor
+- **Alpha Vantage** for financial news and sentiment data
+- **Yahoo Finance** for stock price data
+- **FastAPI** for the excellent Python web framework
+- **React** for the frontend framework
+- **Chart.js** for beautiful visualizations
 
-**Hugo9917** - [GitHub](https://github.com/hugo9917)
+## 📞 Support
 
-## 🙏 Agradecimientos
+If you have any questions or need help:
 
-- **Alpha Vantage** por proporcionar datos de noticias y sentimiento
-- **Yahoo Finance** por datos de precios de acciones
-- **FastAPI** por el framework web moderno
-- **React** por la biblioteca de interfaz de usuario
-
-## 📞 Soporte
-
-Si tienes preguntas o problemas:
-- Contactar: hugo.astorga.17@gmail.com
+- 📧 Email: [your-email@example.com]
+- 🐛 Issues: [GitHub Issues](https://github.com/hugo9917/financial-sentiment-dashboard/issues)
+- 📖 Documentation: [Wiki](https://github.com/hugo9917/financial-sentiment-dashboard/wiki)
 
 ---
 
-⭐ **¡Dale una estrella al proyecto si te gustó!** ⭐ 
+**Made with ❤️ by the Puerta Grande Team** 

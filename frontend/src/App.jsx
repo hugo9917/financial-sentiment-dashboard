@@ -6,6 +6,7 @@ import SentimentAnalysis from './pages/SentimentAnalysis';
 import StockPrices from './pages/StockPrices';
 import Correlation from './pages/Correlation';
 import News from './pages/News';
+import { NotificationProvider } from './components/NotificationSystem';
 import './App.css';
 
 function App() {
@@ -29,21 +30,23 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="App">
-        <Navbar apiStatus={apiStatus} />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/sentiment" element={<SentimentAnalysis />} />
-            <Route path="/stocks" element={<StockPrices />} />
-            <Route path="/correlation" element={<Correlation />} />
-            <Route path="/news" element={<News />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <NotificationProvider>
+      <Router>
+        <div className="App">
+          <Navbar apiStatus={apiStatus} />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/sentiment" element={<SentimentAnalysis />} />
+              <Route path="/stocks" element={<StockPrices />} />
+              <Route path="/correlation" element={<Correlation />} />
+              <Route path="/news" element={<News />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </NotificationProvider>
   );
 }
 

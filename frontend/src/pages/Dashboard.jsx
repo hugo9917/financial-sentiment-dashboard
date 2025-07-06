@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import GlobalStats from '../components/GlobalStats';
 import './Dashboard.css';
 
 // Registrar componentes de Chart.js
@@ -127,40 +128,8 @@ const Dashboard = () => {
         <p>Análisis de sentimiento y correlación con precios de acciones</p>
       </div>
 
-      {/* Estadísticas principales */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Total de Registros</h3>
-          <p className="stat-value">{stats?.general_stats?.total_records || 0}</p>
-        </div>
-        <div className="stat-card">
-          <h3>Sentimiento Promedio</h3>
-          <p className="stat-value">
-            {stats?.general_stats?.overall_sentiment 
-              ? stats.general_stats.overall_sentiment.toFixed(3) 
-              : '0.000'
-            }
-          </p>
-        </div>
-        <div className="stat-card">
-          <h3>Precio Promedio</h3>
-          <p className="stat-value">
-            ${stats?.general_stats?.avg_stock_price 
-              ? stats.general_stats.avg_stock_price.toFixed(2) 
-              : '0.00'
-            }
-          </p>
-        </div>
-        <div className="stat-card">
-          <h3>Última Actualización</h3>
-          <p className="stat-value">
-            {stats?.general_stats?.latest_data_time 
-              ? new Date(stats.general_stats.latest_data_time).toLocaleString('es-ES')
-              : 'N/A'
-            }
-          </p>
-        </div>
-      </div>
+      {/* Componente de estadísticas globales */}
+      <GlobalStats />
 
       {/* Gráficos */}
       <div className="charts-grid">

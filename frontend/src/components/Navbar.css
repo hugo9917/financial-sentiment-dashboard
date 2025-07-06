@@ -87,6 +87,127 @@
   font-size: 1.2rem;
 }
 
+/* Authentication Styles */
+.navbar-auth {
+  display: flex;
+  align-items: center;
+}
+
+.login-button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 0.875rem;
+}
+
+.login-button:hover {
+  background-color: #3182ce;
+  transform: translateY(-1px);
+}
+
+.user-menu {
+  position: relative;
+}
+
+.user-button {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.user-button:hover {
+  background-color: #edf2f7;
+  transform: translateY(-1px);
+}
+
+.user-avatar {
+  font-size: 1.2rem;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  min-width: 200px;
+  margin-top: 8px;
+  z-index: 1000;
+  border: 1px solid #e2e8f0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.user-info strong {
+  color: #2d3748;
+  font-size: 0.875rem;
+}
+
+.user-info span {
+  color: #718096;
+  font-size: 0.75rem;
+}
+
+.user-role-badge {
+  background-color: #4299e1;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.logout-button {
+  background-color: #f56565;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #e53e3e;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .navbar {
@@ -108,5 +229,14 @@
   .nav-links li a {
     padding: 8px 12px;
     font-size: 0.9rem;
+  }
+
+  .navbar-auth {
+    margin-top: 1rem;
+  }
+
+  .user-dropdown {
+    right: -1rem;
+    min-width: 180px;
   }
 } 
