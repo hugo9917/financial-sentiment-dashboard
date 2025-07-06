@@ -69,7 +69,7 @@ class DashboardTester:
             start_time = time.time()
             login_data = {
                 "username": "admin",
-                "password": "admin123"
+                "password": os.getenv("ADMIN_PASSWORD", "admin123")
             }
             response = self.session.post(
                 f"{self.base_url}/auth/login",

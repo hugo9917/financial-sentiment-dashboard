@@ -24,14 +24,14 @@ security = HTTPBearer()
 USERS_DB = {
     "admin": {
         "username": "admin",
-        "hashed_password": pwd_context.hash("admin123"),
+        "hashed_password": pwd_context.hash(os.getenv("ADMIN_PASSWORD", "admin123")),
         "email": "admin@example.com",
         "full_name": "Administrator",
         "role": "admin"
     },
     "user": {
         "username": "user",
-        "hashed_password": pwd_context.hash("user123"),
+        "hashed_password": pwd_context.hash(os.getenv("USER_PASSWORD", "user123")),
         "email": "user@example.com",
         "full_name": "Regular User",
         "role": "user"

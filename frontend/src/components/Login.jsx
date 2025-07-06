@@ -108,15 +108,8 @@ const Login = ({ onLogin, onClose }) => {
         </form>
 
         <div className="login-info">
-          <h4>Usuarios de prueba:</h4>
-          <div className="user-credentials">
-            <div>
-              <strong>Admin:</strong> admin / admin123
-            </div>
-            <div>
-              <strong>Usuario:</strong> user / user123
-            </div>
-          </div>
+          <p><strong>Admin:</strong> admin / [Check environment variables]</p>
+          <p><strong>User:</strong> user / [Check environment variables]</p>
         </div>
       </div>
     </div>

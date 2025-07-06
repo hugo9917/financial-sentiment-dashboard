@@ -8,6 +8,7 @@ import json
 import time
 import sys
 from datetime import datetime
+import os
 
 # Configuración
 BASE_URL = "http://localhost:8000"
@@ -46,7 +47,7 @@ def test_authentication():
         # Probar login
         login_data = {
             "username": "admin",
-            "password": "admin123"
+            "password": os.getenv("ADMIN_PASSWORD", "admin123")
         }
         
         response = requests.post(

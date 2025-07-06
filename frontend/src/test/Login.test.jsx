@@ -25,8 +25,8 @@ describe('Login Component', () => {
     render(<Login onLogin={mockOnLogin} onClose={mockOnClose} />)
     
     expect(screen.getByText('Usuarios de prueba:')).toBeInTheDocument()
-    expect(screen.getByText(/Admin: admin \/ admin123/)).toBeInTheDocument()
-    expect(screen.getByText(/Usuario: user \/ user123/)).toBeInTheDocument()
+    expect(screen.getByText(/Admin: admin/)).toBeInTheDocument()
+    expect(screen.getByText(/Usuario: user/)).toBeInTheDocument()
   })
 
   it('handles form submission successfully', async () => {

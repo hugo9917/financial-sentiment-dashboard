@@ -222,13 +222,13 @@ python test_implementation.py
 #### Authentication
 ```bash
 # Available test users:
-# Admin: admin / admin123
+# Admin: admin / [Check environment variables]
 # User: user / user123
 
 # Test authentication endpoints
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin&password=admin123"
+  -d "username=admin&password=$ADMIN_PASSWORD"
 ```
 
 #### News Page
@@ -283,7 +283,7 @@ docker-compose -f docker-compose.prod.yml up -d
 DB_HOST=postgres
 DB_NAME=financial_sentiment
 DB_USER=postgres
-DB_PASSWORD=password
+DB_PASSWORD=your_secure_password
 DB_PORT=5432
 
 # Optional

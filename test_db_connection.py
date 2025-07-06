@@ -14,7 +14,7 @@ load_dotenv("config.env")
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_NAME = os.getenv('DB_NAME', 'financial_sentiment')
 DB_USER = os.getenv('DB_USER', 'postgres')
-DB_PASSWORD = os.getenv('DB_PASSWORD', '1234')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'password')
 DB_PORT = int(os.getenv('DB_PORT', '5432'))
 
 def test_connection():
