@@ -315,10 +315,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you have any questions or need help:
 
-- 📧 Email: [your-email@example.com]
+- 📧 Email: hugo.astorga.17@gmail.com
 - 🐛 Issues: [GitHub Issues](https://github.com/hugo9917/financial-sentiment-dashboard/issues)
 - 📖 Documentation: [Wiki](https://github.com/hugo9917/financial-sentiment-dashboard/wiki)
 
 ---
 
-**Made with ❤️ by the Puerta Grande Team** 
+**Made by Hugo Astorga** 
