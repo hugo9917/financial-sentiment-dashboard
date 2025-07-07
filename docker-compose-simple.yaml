@@ -93,6 +93,25 @@ services:
       start_period: 30s
     restart: always
 
+  # Database Backup Service
+  backup:
+    build:
+      context: .
+      dockerfile: backup/Dockerfile
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=financial_sentiment
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_PORT=5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db_backups:/backups
+      - ./scripts:/scripts
+    restart: always
+
 volumes:
   postgres_data:
   redis_data: 

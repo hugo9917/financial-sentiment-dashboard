@@ -1,13 +1,15 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Dashboard from '../pages/Dashboard'
 
-// Mock the API calls
-vi.mock('../utils/api', () => ({
-  fetchDashboardStats: vi.fn(),
-  fetchSentimentSummary: vi.fn(),
-  fetchStockPrices: vi.fn(),
-  fetchLatestNews: vi.fn()
+// Mock fetch globally
+global.fetch = vi.fn()
+
+// Mock Chart.js components
+vi.mock('react-chartjs-2', () => ({
+  Line: ({ data }) => <div data-testid="line-chart">{JSON.stringify(data)}</div>,
+  Bar: ({ data }) => <div data-testid="bar-chart">{JSON.stringify(data)}</div>,
+  Doughnut: ({ data }) => <div data-testid="doughnut-chart">{JSON.stringify(data)}</div>
 }))
 
 describe('Dashboard', () => {
@@ -22,86 +24,264 @@ describe('Dashboard', () => {
 
   it('shows loading state initially', () => {
     render(<Dashboard />)
-    expect(screen.getByText(/Loading/i)).toBeInTheDocument()
+    expect(screen.getByText(/Cargando dashboard/i)).toBeInTheDocument()
   })
 
   it('displays dashboard stats when data is loaded', async () => {
     const mockStats = {
-      total_news: 100,
-      total_stocks: 5,
-      avg_sentiment: 0.25
+      general_stats: {
+        total_records: 1422,
+        overall_sentiment: -0.07,
+        avg_stock_price: 298.75,
+        latest_data_time: "2025-06-30T00:00:00"
+      },
+      sentiment_distribution: [
+        { sentiment_category: 'Positive', count: 45 },
+        { sentiment_category: 'Neutral', count: 30 },
+        { sentiment_category: 'Negative', count: 25 }
+      ]
     }
 
-    const { fetchDashboardStats } = await import('../utils/api')
-    fetchDashboardStats.mockResolvedValue(mockStats)
+    const mockTimeline = {
+      timeline: [
+        { time_period: "2025-06-30T10:00:00", sentiment_score: 0.65, avg_price: 150.25, news_count: 15, total_volume: 1000000 },
+        { time_period: "2025-06-30T09:00:00", sentiment_score: 0.45, avg_price: 149.80, news_count: 12, total_volume: 950000 }
+      ]
+    }
+
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockStats
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockTimeline
+      })
 
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText('100')).toBeInTheDocument()
-      expect(screen.getByText('5')).toBeInTheDocument()
+      expect(screen.getByText('1,422')).toBeInTheDocument() // Total records
+      expect(screen.getByText('-0.070')).toBeInTheDocument() // Overall sentiment
+      expect(screen.getByText('$298.75')).toBeInTheDocument() // Avg stock price
     })
   })
 
   it('handles API errors gracefully', async () => {
-    const { fetchDashboardStats } = await import('../utils/api')
-    fetchDashboardStats.mockRejectedValue(new Error('API Error'))
+    global.fetch.mockRejectedValue(new Error('API Error'))
 
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Error loading data/i)).toBeInTheDocument()
+      expect(screen.getByText(/Error al cargar datos del dashboard/i)).toBeInTheDocument()
     })
   })
 
-  it('displays sentiment summary when available', async () => {
-    const mockSentiment = [
-      { sentiment_category: 'Positive', count: 50, avg_score: 0.6 },
-      { sentiment_category: 'Negative', count: 30, avg_score: -0.4 }
-    ]
-
-    const { fetchSentimentSummary } = await import('../utils/api')
-    fetchSentimentSummary.mockResolvedValue({ summary: mockSentiment })
+  it('displays time filters', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ general_stats: {}, sentiment_distribution: [] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
 
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText('Positive')).toBeInTheDocument()
-      expect(screen.getByText('Negative')).toBeInTheDocument()
+      expect(screen.getByText('24h')).toBeInTheDocument()
+      expect(screen.getByText('7d')).toBeInTheDocument()
+      expect(screen.getByText('30d')).toBeInTheDocument()
     })
   })
 
-  it('displays stock prices chart when data is available', async () => {
-    const mockPrices = [
-      { symbol: 'AAPL', close_price: 150.25, timestamp: '2024-01-15T10:00:00Z' },
-      { symbol: 'GOOGL', close_price: 2800.50, timestamp: '2024-01-15T10:00:00Z' }
-    ]
-
-    const { fetchStockPrices } = await import('../utils/api')
-    fetchStockPrices.mockResolvedValue({ prices: mockPrices })
+  it('changes time range when filter is clicked', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ general_stats: {}, sentiment_distribution: [] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
 
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText('AAPL')).toBeInTheDocument()
-      expect(screen.getByText('GOOGL')).toBeInTheDocument()
+      const sevenDayButton = screen.getByText('7d')
+      fireEvent.click(sevenDayButton)
+      
+      // Should make new API calls with updated time range
+      expect(global.fetch).toHaveBeenCalledTimes(4) // Initial + 3 filter clicks
     })
   })
 
-  it('displays latest news when available', async () => {
-    const mockNews = [
-      { title: 'Apple Reports Strong Q4 Earnings', sentiment_score: 0.8 },
-      { title: 'Tech Stocks Rally on Fed Decision', sentiment_score: 0.6 }
-    ]
+  it('displays sentiment distribution chart', async () => {
+    const mockStats = {
+      general_stats: {
+        total_records: 1422,
+        overall_sentiment: -0.07,
+        avg_stock_price: 298.75,
+        latest_data_time: "2025-06-30T00:00:00"
+      },
+      sentiment_distribution: [
+        { sentiment_category: 'Positive', count: 45 },
+        { sentiment_category: 'Neutral', count: 30 },
+        { sentiment_category: 'Negative', count: 25 }
+      ]
+    }
 
-    const { fetchLatestNews } = await import('../utils/api')
-    fetchLatestNews.mockResolvedValue({ news: mockNews })
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockStats
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
 
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText(/Apple Reports Strong Q4 Earnings/i)).toBeInTheDocument()
-      expect(screen.getByText(/Tech Stocks Rally/i)).toBeInTheDocument()
+      expect(screen.getByTestId('doughnut-chart')).toBeInTheDocument()
+    })
+  })
+
+  it('displays timeline chart', async () => {
+    const mockTimeline = {
+      timeline: [
+        { time_period: "2025-06-30T10:00:00", sentiment_score: 0.65, avg_price: 150.25, news_count: 15, total_volume: 1000000 },
+        { time_period: "2025-06-30T09:00:00", sentiment_score: 0.45, avg_price: 149.80, news_count: 12, total_volume: 950000 }
+      ]
+    }
+
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ general_stats: {}, sentiment_distribution: [] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockTimeline
+      })
+
+    render(<Dashboard />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('line-chart')).toBeInTheDocument()
+    })
+  })
+
+  it('displays system information', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ general_stats: {}, sentiment_distribution: [] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
+
+    render(<Dashboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Información del Sistema/i)).toBeInTheDocument()
+      expect(screen.getByText(/Estado de la API/i)).toBeInTheDocument()
+      expect(screen.getByText(/Base de Datos/i)).toBeInTheDocument()
+    })
+  })
+
+  it('shows positive sentiment in green color', async () => {
+    const mockStats = {
+      general_stats: {
+        total_records: 1422,
+        overall_sentiment: 0.15, // Positive sentiment
+        avg_stock_price: 298.75,
+        latest_data_time: "2025-06-30T00:00:00"
+      },
+      sentiment_distribution: []
+    }
+
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockStats
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
+
+    render(<Dashboard />)
+
+    await waitFor(() => {
+      const sentimentElement = screen.getByText('0.150')
+      expect(sentimentElement).toHaveClass('positive')
+    })
+  })
+
+  it('shows negative sentiment in red color', async () => {
+    const mockStats = {
+      general_stats: {
+        total_records: 1422,
+        overall_sentiment: -0.15, // Negative sentiment
+        avg_stock_price: 298.75,
+        latest_data_time: "2025-06-30T00:00:00"
+      },
+      sentiment_distribution: []
+    }
+
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockStats
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
+
+    render(<Dashboard />)
+
+    await waitFor(() => {
+      const sentimentElement = screen.getByText('-0.150')
+      expect(sentimentElement).toHaveClass('negative')
+    })
+  })
+
+  it('handles empty data gracefully', async () => {
+    const mockStats = {
+      general_stats: {
+        total_records: 0,
+        overall_sentiment: 0,
+        avg_stock_price: 0,
+        latest_data_time: null
+      },
+      sentiment_distribution: []
+    }
+
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockStats
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
+
+    render(<Dashboard />)
+
+    await waitFor(() => {
+      expect(screen.getByText('0')).toBeInTheDocument() // Total records
+      expect(screen.getByText('0.000')).toBeInTheDocument() // Overall sentiment
+      expect(screen.getByText('$0.00')).toBeInTheDocument() // Avg stock price
     })
   })
 }) 

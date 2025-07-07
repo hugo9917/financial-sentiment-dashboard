@@ -9,6 +9,7 @@ A comprehensive dashboard for analyzing the correlation between financial news s
 - **📊 Interactive Visualizations**: Correlation charts and temporal evolution
 - **🔐 Authentication System**: JWT with user and admin roles
 - **📰 Complete News Page**: Filters, search and sentiment analysis
+- **🔒 Rate Limiting**: Advanced protection against API abuse
 - **🏗️ Modern Architecture**: React + FastAPI + PostgreSQL
 - **🐳 Containerized**: Docker for easy deployment
 - **📱 Responsive**: Interface adapted for mobile and desktop

@@ -21,11 +21,17 @@
           "w": 12,
           "x": 0,
           "y": 0
-        }
+        },
+        "yAxes": [
+          {
+            "label": "Requests per second",
+            "min": 0
+          }
+        ]
       },
       {
         "id": 2,
-        "title": "Response Time",
+        "title": "Average Response Time",
         "type": "graph",
         "targets": [
           {
@@ -42,10 +48,114 @@
           "w": 12,
           "x": 12,
           "y": 0
-        }
+        },
+        "yAxes": [
+          {
+            "label": "Response time (seconds)",
+            "min": 0
+          }
+        ]
       },
       {
         "id": 3,
+        "title": "Sentiment Analysis Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "avg_over_time(sentiment_score[5m])",
+            "legendFormat": "Average Sentiment Score"
+          },
+          {
+            "expr": "avg_over_time(sentiment_subjectivity[5m])",
+            "legendFormat": "Average Subjectivity"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "yAxes": [
+          {
+            "label": "Sentiment Score",
+            "min": -1,
+            "max": 1
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Stock Price Trends",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "avg_over_time(stock_price_close[5m])",
+            "legendFormat": "Average Close Price"
+          },
+          {
+            "expr": "max_over_time(stock_price_high[5m])",
+            "legendFormat": "Max High Price"
+          },
+          {
+            "expr": "min_over_time(stock_price_low[5m])",
+            "legendFormat": "Min Low Price"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "yAxes": [
+          {
+            "label": "Price ($)",
+            "min": 0
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Data Ingestion Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(news_articles_processed_total[5m])",
+            "legendFormat": "News articles per second"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 16
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Database Records",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "financial_sentiment_records_total",
+            "legendFormat": "Total records"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 16
+        }
+      },
+      {
+        "id": 7,
         "title": "Error Rate",
         "type": "graph",
         "targets": [
@@ -62,45 +172,17 @@
           "h": 8,
           "w": 12,
           "x": 0,
-          "y": 8
-        }
-      },
-      {
-        "id": 4,
-        "title": "Database Connections",
-        "type": "stat",
-        "targets": [
+          "y": 20
+        },
+        "yAxes": [
           {
-            "expr": "pg_stat_database_numbackends",
-            "legendFormat": "Active connections"
+            "label": "Errors per second",
+            "min": 0
           }
-        ],
-        "gridPos": {
-          "h": 4,
-          "w": 6,
-          "x": 12,
-          "y": 8
-        }
+        ]
       },
       {
-        "id": 5,
-        "title": "Redis Memory Usage",
-        "type": "stat",
-        "targets": [
-          {
-            "expr": "redis_memory_used_bytes",
-            "legendFormat": "Memory used"
-          }
-        ],
-        "gridPos": {
-          "h": 4,
-          "w": 6,
-          "x": 18,
-          "y": 8
-        }
-      },
-      {
-        "id": 6,
+        "id": 8,
         "title": "System Resources",
         "type": "graph",
         "targets": [
@@ -115,16 +197,152 @@
         ],
         "gridPos": {
           "h": 8,
-          "w": 24,
+          "w": 12,
+          "x": 12,
+          "y": 20
+        },
+        "yAxes": [
+          {
+            "label": "Usage %",
+            "min": 0,
+            "max": 100
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Database Connections",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends",
+            "legendFormat": "Active connections"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
           "x": 0,
-          "y": 16
+          "y": 28
         }
+      },
+      {
+        "id": 10,
+        "title": "Redis Memory Usage",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes",
+            "legendFormat": "Memory used"
+          }
+        ],
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 28
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Sentiment Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (sentiment_category) (sentiment_records_total)",
+            "legendFormat": "{{sentiment_category}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 28
+        }
+      },
+      {
+        "id": 12,
+        "title": "API Endpoint Usage",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "sum by (endpoint) (rate(http_requests_total[5m]))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 32
+        },
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {
+                "Time": true,
+                "__name__": true,
+                "job": true,
+                "instance": true
+              },
+              "renameByName": {
+                "endpoint": "Endpoint",
+                "Value": "Requests/sec"
+              }
+            }
+          }
+        ]
       }
     ],
     "time": {
       "from": "now-1h",
       "to": "now"
     },
-    "refresh": "30s"
+    "refresh": "30s",
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "templating": {
+      "list": [
+        {
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "datasource": "Prometheus",
+          "definition": "label_values(http_requests_total, endpoint)",
+          "hide": 0,
+          "includeAll": true,
+          "label": "Endpoint",
+          "multi": false,
+          "name": "endpoint",
+          "options": [],
+          "query": "label_values(http_requests_total, endpoint)",
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0,
+          "type": "query"
+        }
+      ]
+    }
   }
 } 

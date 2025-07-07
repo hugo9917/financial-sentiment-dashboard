@@ -2,6 +2,10 @@ from fastapi import FastAPI, HTTPException, Depends, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from rate_limiting_middleware import create_rate_limiting_middleware
 import psycopg2
 import pandas as pd
 from datetime import datetime, timedelta
@@ -125,6 +129,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Configurar Rate Limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # Middleware para logging y métricas
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -180,6 +189,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Agregar middleware de rate limiting personalizado
+rate_limiting_middleware = create_rate_limiting_middleware(limiter)
+app.middleware("http")(rate_limiting_middleware)
+
 # Configuración de la base de datos desde variables de entorno
 DB_CONFIG = {
     'host': os.getenv('DB_HOST', 'postgres'),
@@ -211,7 +224,8 @@ async def root():
     return {"message": "Financial Sentiment API v1.0.0", "status": "running"}
 
 @app.post("/auth/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+@limiter.limit("5/minute")  # Máximo 5 intentos por minuto
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     """Endpoint de login"""
     user = authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -297,7 +311,8 @@ async def health_check():
         }
 
 @app.get("/metrics")
-async def get_metrics():
+@limiter.limit("30/minute")  # Máximo 30 requests por minuto
+async def get_metrics(request: Request):
     """Obtener métricas de la aplicación"""
     return {
         "request_count": metrics.request_count,
@@ -308,8 +323,27 @@ async def get_metrics():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.get("/rate-limit/status")
+@limiter.limit("10/minute")  # Máximo 10 requests por minuto
+async def get_rate_limit_status(request: Request):
+    """Obtener estado del rate limiting para la IP actual"""
+    from rate_limiting_middleware import AdvancedRateLimiter
+    from slowapi.util import get_remote_address
+    
+    client_ip = get_remote_address(request)
+    advanced_limiter = AdvancedRateLimiter(limiter)
+    
+    rate_limit_info = advanced_limiter.get_rate_limit_info(client_ip)
+    
+    return {
+        "ip": client_ip,
+        "rate_limit_info": rate_limit_info,
+        "timestamp": datetime.now().isoformat()
+    }
+
 @app.get("/api/sentiment/summary")
-async def get_sentiment_summary(hours: int = 24):
+@limiter.limit("60/minute")  # Máximo 60 requests por minuto
+async def get_sentiment_summary(request: Request, hours: int = 24):
     """Obtener resumen de sentimiento de las últimas N horas"""
     try:
         conn = get_db_connection()
@@ -389,7 +423,9 @@ async def get_sentiment_summary(hours: int = 24):
         }
 
 @app.get("/api/sentiment/timeline")
+@limiter.limit("60/minute")  # Máximo 60 requests por minuto
 async def get_sentiment_timeline(
+    request: Request,
     hours: int = 24,
     interval: str = "hour"
 ):
@@ -449,7 +485,8 @@ async def get_sentiment_timeline(
         }
 
 @app.get("/api/correlation/analysis")
-async def get_correlation_analysis(hours: int = 24):
+@limiter.limit("30/minute")  # Máximo 30 requests por minuto (más restrictivo por ser computacionalmente intensivo)
+async def get_correlation_analysis(request: Request, hours: int = 24):
     """Obtener análisis de correlación entre sentimiento y precios"""
     try:
         conn = get_db_connection()
@@ -497,7 +534,8 @@ async def get_correlation_analysis(hours: int = 24):
         }
 
 @app.get("/api/stocks/prices")
-async def get_stock_prices(hours: int = 24):
+@limiter.limit("60/minute")  # Máximo 60 requests por minuto
+async def get_stock_prices(request: Request, hours: int = 24):
     """Obtener datos de precios de acciones"""
     try:
         conn = get_db_connection()
@@ -545,7 +583,8 @@ async def get_stock_prices(hours: int = 24):
         }
 
 @app.get("/api/news/latest")
-async def get_latest_news(limit: int = 10):
+@limiter.limit("60/minute")  # Máximo 60 requests por minuto
+async def get_latest_news(request: Request, limit: int = 10):
     """Obtener las últimas noticias con sentimiento"""
     try:
         conn = get_db_connection()
@@ -646,13 +685,39 @@ async def get_latest_news(limit: int = 10):
             "total_count": 2
         }
 
+@app.get("/test-db")
+async def test_database():
+    """Endpoint de prueba para verificar la conexión a la base de datos"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return {"error": "No database connection"}
+        
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM financial_sentiment_correlation")
+        total_count = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM financial_sentiment_correlation WHERE hour >= NOW() - INTERVAL '720 HOUR'")
+        recent_count = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "total_records": total_count,
+            "recent_records": recent_count,
+            "connection": "success"
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/api/dashboard/stats")
-async def get_dashboard_stats():
+@limiter.limit("30/minute")  # Máximo 30 requests por minuto (más restrictivo por ser computacionalmente intensivo)
+async def get_dashboard_stats(request: Request, hours: int = 8760):
     """Obtener estadísticas generales del dashboard"""
     try:
         conn = get_db_connection()
         if not conn:
-            # Datos de ejemplo para desarrollo
             return {
                 "general_stats": {
                     "total_records": 1250,
@@ -666,57 +731,81 @@ async def get_dashboard_stats():
                     {"sentiment_category": "Negative", "count": 25}
                 ]
             }
-        # Consultas para estadísticas generales
-        stats_query = """
+        
+        # Usar cursor directo en lugar de pandas para evitar problemas con intervalos
+        cursor = conn.cursor()
+        
+        # Debug: verificar la query que se está ejecutando
+        stats_query = f"""
         SELECT 
             COUNT(*) as total_records,
             AVG(avg_sentiment_score) as overall_sentiment,
             AVG(avg_close_price) as avg_stock_price,
             MAX(hour) as latest_data_time
         FROM financial_sentiment_correlation 
-        WHERE hour >= NOW() - INTERVAL '24 hours'
+        WHERE hour >= NOW() - INTERVAL '{hours} hours'
         """
-        cursor = conn.cursor()
+        logger.info(f"Executing query: {stats_query}")
         cursor.execute(stats_query)
-        stats = cursor.fetchone()
+        stats_row = cursor.fetchone()
+        
+        logger.info(f"Query result: {stats_row}")
+        
+        # Debug adicional: verificar el tipo de datos
+        if stats_row:
+            total_records, overall_sentiment, avg_stock_price, latest_data_time = stats_row
+            logger.info(f"Parsed values - total_records: {total_records} (type: {type(total_records)})")
+            logger.info(f"Parsed values - overall_sentiment: {overall_sentiment} (type: {type(overall_sentiment)})")
+            logger.info(f"Parsed values - avg_stock_price: {avg_stock_price} (type: {type(avg_stock_price)})")
+            logger.info(f"Parsed values - latest_data_time: {latest_data_time} (type: {type(latest_data_time)})")
+        else:
+            total_records, overall_sentiment, avg_stock_price, latest_data_time = 0, 0, 0, None
+            logger.warning("Query returned no results")
+        
         # Distribución de sentimiento
-        dist_query = """
+        dist_query = f"""
         SELECT sentiment_category, COUNT(*) as count
         FROM financial_sentiment_correlation
-        WHERE hour >= NOW() - INTERVAL '24 hours'
+        WHERE hour >= NOW() - INTERVAL '{hours} hours'
         GROUP BY sentiment_category
         ORDER BY count DESC
         """
         cursor.execute(dist_query)
-        dist = cursor.fetchall()
-        sentiment_distribution = [
-            {"sentiment_category": row[0], "count": row[1]} for row in dist
-        ]
+        dist_results = cursor.fetchall()
+        
+        sentiment_distribution = []
+        for row in dist_results:
+            sentiment_category, count = row
+            sentiment_distribution.append({
+                "sentiment_category": sentiment_category,
+                "count": count
+            })
+        
         cursor.close()
         conn.close()
+        
+        logger.info(f"Dashboard stats: {total_records} records, sentiment: {overall_sentiment}, price: {avg_stock_price}")
+        
         return {
             "general_stats": {
-                "total_records": stats[0] or 0,
-                "overall_sentiment": float(stats[1]) if stats[1] else 0,
-                "avg_stock_price": float(stats[2]) if stats[2] else 0,
-                "latest_data_time": stats[3].isoformat() if stats[3] else None
+                "total_records": int(total_records) if total_records else 0,
+                "overall_sentiment": float(overall_sentiment) if overall_sentiment else 0,
+                "avg_stock_price": float(avg_stock_price) if avg_stock_price else 0,
+                "latest_data_time": latest_data_time.isoformat() if latest_data_time else None
             },
             "sentiment_distribution": sentiment_distribution
         }
     except Exception as e:
-        # Datos de ejemplo en caso de error
+        logger.error(f"Error in dashboard stats: {str(e)}")
         return {
             "general_stats": {
-                "total_records": 1250,
-                "overall_sentiment": 0.15,
-                "avg_stock_price": 150.25,
-                "latest_data_time": datetime.now().isoformat()
+                "total_records": 0,
+                "overall_sentiment": 0,
+                "avg_stock_price": 0,
+                "latest_data_time": None
             },
-            "sentiment_distribution": [
-                {"sentiment_category": "Positive", "count": 45},
-                {"sentiment_category": "Neutral", "count": 30},
-                {"sentiment_category": "Negative", "count": 25}
-            ]
+            "sentiment_distribution": [],
+            "error": str(e)
         }
 
 @app.get("/api/sentiment/summary_by_symbol")

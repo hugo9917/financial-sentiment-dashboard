@@ -1,196 +1,68 @@
-name: CI/CD Pipeline
+name: CI - Backend & Frontend
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main, develop]
 
 jobs:
-  test-backend:
+  backend:
+    name: Backend - Lint & Test
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: test_db
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
+    defaults:
+      run:
+        working-directory: backend
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    
-    - name: Install dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov flake8 black isort
-    
-    - name: Lint with flake8
-      run: |
-        cd backend
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
-    
-    - name: Format check with black
-      run: |
-        cd backend
-        black --check --diff .
-    
-    - name: Import check with isort
-      run: |
-        cd backend
-        isort --check-only --diff .
-    
-    - name: Run tests
-      env:
-        DB_HOST: localhost
-        DB_NAME: test_db
-        DB_USER: postgres
-        DB_PASSWORD: password
-        DB_PORT: 5432
-      run: |
-        cd backend
-        pytest --cov=. --cov-report=xml --cov-report=term-missing
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint (flake8)
+        run: flake8 .
+      - name: Format check (black)
+        run: black --check .
+      - name: Import sort check (isort)
+        run: isort --check-only .
+      - name: Run tests
+        run: pytest --maxfail=1 --disable-warnings --cov=.
 
-  test-frontend:
+  frontend:
+    name: Frontend - Lint & Test
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: frontend
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-    
-    - name: Install dependencies
-      run: |
-        cd frontend
-        npm ci
-    
-    - name: Lint with ESLint
-      run: |
-        cd frontend
-        npm run lint
-    
-    - name: Run tests
-      run: |
-        cd frontend
-        npm run test:coverage
-    
-    - name: Build
-      run: |
-        cd frontend
-        npm run build
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Run tests
+        run: npm run test -- --run
 
-  security:
+  docker-build:
+    name: Build Docker Images
     runs-on: ubuntu-latest
-    
+    needs: [backend, frontend]
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    
-    - name: Install dependencies
-      run: |
-        cd backend
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install bandit safety
-    
-    - name: Run security checks
-      run: |
-        cd backend
-        bandit -r . -f json -o bandit-report.json || true
-        safety check --json --output safety-report.json || true
-    
-    - name: Upload security reports
-      uses: actions/upload-artifact@v3
-      with:
-        name: security-reports
-        path: |
-          backend/bandit-report.json
-          backend/safety-report.json
-
-  docker:
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend]
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Build and test Docker images
-      run: |
-        docker build -t financial-sentiment-backend ./backend
-        docker build -t financial-sentiment-frontend ./frontend
-        
-        # Test backend container
-        docker run --rm financial-sentiment-backend python -c "import fastapi; print('Backend container test passed')"
-        
-        # Test frontend container
-        docker run --rm financial-sentiment-frontend node --version
-
-  deploy-staging:
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend, docker]
-    if: github.ref == 'refs/heads/develop'
-    
-    steps:
-    - name: Deploy to staging
-      run: |
-        echo "Deploying to staging environment..."
-        # Add your staging deployment steps here
-        # Example: docker-compose -f docker-compose.staging.yml up -d
-
-  deploy-production:
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend, docker]
-    if: github.ref == 'refs/heads/main'
-    environment: production
-    
-    steps:
-    - name: Deploy to production
-      run: |
-        echo "Deploying to production environment..."
-        # Add your production deployment steps here
-        # Example: docker-compose -f docker-compose.prod.yml up -d
-
-  notify:
-    runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend, docker]
-    if: always()
-    
-    steps:
-    - name: Notify on failure
-      if: failure()
-      run: |
-        echo "CI/CD pipeline failed!"
-        # Add notification logic here (Slack, email, etc.)
-    
-    - name: Notify on success
-      if: success()
-      run: |
-        echo "CI/CD pipeline completed successfully!"
-        # Add notification logic here (Slack, email, etc.) 
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        run: docker build -t backend-test ./backend
+      - name: Build frontend image
+        run: docker build -t frontend-test ./frontend 

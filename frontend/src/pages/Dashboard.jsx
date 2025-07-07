@@ -33,22 +33,24 @@ const Dashboard = () => {
   const [timeline, setTimeline] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [timeRange, setTimeRange] = useState(24); // Filtro de tiempo en horas
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [timeRange]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      
       // Obtener estadísticas generales
-      const statsResponse = await fetch(`${apiUrl}/api/dashboard/stats`);
+      const statsResponse = await fetch(`${apiUrl}/api/dashboard/stats?hours=${timeRange * 30}`); // Convertir a días
       const statsData = await statsResponse.json();
       setStats(statsData);
 
       // Obtener línea de tiempo
-      const timelineResponse = await fetch(`${apiUrl}/api/sentiment/timeline?hours=24`);
+      const timelineResponse = await fetch(`${apiUrl}/api/sentiment/timeline?hours=${timeRange}`);
       const timelineData = await timelineResponse.json();
       setTimeline(timelineData);
 
@@ -58,6 +60,10 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTimeRangeChange = (newRange) => {
+    setTimeRange(newRange);
   };
 
   if (loading) {
@@ -126,7 +132,59 @@ const Dashboard = () => {
       <div className="dashboard-header">
         <h1>Dashboard Financiero</h1>
         <p>Análisis de sentimiento y correlación con precios de acciones</p>
+        
+        {/* Filtros de tiempo */}
+        <div className="time-filters">
+          <span>Rango de tiempo:</span>
+          <button 
+            className={timeRange === 24 ? 'active' : ''} 
+            onClick={() => handleTimeRangeChange(24)}
+          >
+            24h
+          </button>
+          <button 
+            className={timeRange === 168 ? 'active' : ''} 
+            onClick={() => handleTimeRangeChange(168)}
+          >
+            7d
+          </button>
+          <button 
+            className={timeRange === 720 ? 'active' : ''} 
+            onClick={() => handleTimeRangeChange(720)}
+          >
+            30d
+          </button>
+        </div>
       </div>
+
+      {/* Estadísticas principales */}
+      {stats?.general_stats && (
+        <div className="stats-overview">
+          <div className="stat-card">
+            <h3>Total de Registros</h3>
+            <p className="stat-value">{stats.general_stats.total_records?.toLocaleString()}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Sentimiento General</h3>
+            <p className={`stat-value ${stats.general_stats.overall_sentiment > 0 ? 'positive' : 'negative'}`}>
+              {stats.general_stats.overall_sentiment?.toFixed(3)}
+            </p>
+          </div>
+          <div className="stat-card">
+            <h3>Precio Promedio</h3>
+            <p className="stat-value">${stats.general_stats.avg_stock_price?.toFixed(2)}</p>
+          </div>
+          <div className="stat-card">
+            <h3>Última Actualización</h3>
+            <p className="stat-value">
+              {stats.general_stats.latest_data_time 
+                ? new Date(stats.general_stats.latest_data_time).toLocaleString('es-ES')
+                : 'N/A'
+              }
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Componente de estadísticas globales */}
       <GlobalStats />
@@ -146,7 +204,7 @@ const Dashboard = () => {
                   },
                   title: {
                     display: true,
-                    text: 'Últimas 12 horas',
+                    text: `Últimas ${timeRange} horas`,
                   },
                 },
                 scales: {
@@ -194,15 +252,12 @@ const Dashboard = () => {
           <div className="info-item">
             <strong>Base de Datos:</strong> 
             <span className={stats ? 'status-ok' : 'status-error'}>
-              {stats ? 'Redshift' : 'N/A'}
+              {stats ? 'PostgreSQL' : 'N/A'}
             </span>
           </div>
           <div className="info-item">
-            <strong>Última Actualización:</strong> 
-            {stats?.last_updated 
-              ? new Date(stats.last_updated).toLocaleString('es-ES')
-              : 'N/A'
-            }
+            <strong>Registros Procesados:</strong> 
+            <span>{stats?.general_stats?.total_records || 0}</span>
           </div>
         </div>
       </div>
