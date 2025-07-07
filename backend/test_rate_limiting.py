@@ -197,7 +197,8 @@ class RateLimitTester:
             total_data_requests += len(responses)
             total_data_rate_limited += rate_limited
             print(
-                f"📊 {endpoint}: {rate_limited} rate limited de {len(responses)} requests"
+                f"📊 {endpoint}: {
+                    rate_limited} rate limited de {len(responses)} requests"
             )
 
         print(
