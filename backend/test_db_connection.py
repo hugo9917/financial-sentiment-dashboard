@@ -97,8 +97,7 @@ def test_connection():
         print(f"  Base: {DB_NAME}")
         print(f"  Usuario: {DB_USER}")
         print(
-            f"  Contraseña: {
-                '*' * len(DB_PASSWORD) if DB_PASSWORD else 'No configurada'}"
+            f"  Contraseña: {'*' * len(DB_PASSWORD) if DB_PASSWORD else 'No configurada'}"
         )
 
         # Mostrar más información de debug

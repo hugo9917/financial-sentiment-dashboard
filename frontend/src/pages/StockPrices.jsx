@@ -57,7 +57,7 @@ function StockPrices() {
         setLoading(false);
         setPage(1); // Resetear página al cambiar filtro
       })
-      .catch(err => {
+      .catch(() => {
         setError('Error al cargar los datos');
         setLoading(false);
       });
@@ -121,7 +121,7 @@ function StockPrices() {
         title: { display: true, text: 'Fecha/Hora', color: '#fff' },
         ticks: {
           color: '#fff',
-          callback: function(value, index, ticks) {
+          callback: function(value) {
             const label = this.getLabelForValue(value);
             return label.length > 10 ? label.slice(0, 10) : label;
           }

@@ -60,7 +60,7 @@ function SentimentAnalysis() {
         setLoading(false);
         setPage(1); // Resetear página al cambiar filtro
       })
-      .catch(err => {
+      .catch(() => {
         setError('Error al cargar los datos');
         setLoading(false);
       });

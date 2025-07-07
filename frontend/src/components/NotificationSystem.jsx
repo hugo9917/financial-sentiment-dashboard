@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import './NotificationSystem.css';
 
 // Contexto para las notificaciones
@@ -177,4 +177,8 @@ export const useQuickNotifications = () => {
   return { success, error, warning, info };
 };
 
+// Definición mínima si no existe
+function NotificationSystem() {
+  return null;
+}
 export default NotificationSystem; 

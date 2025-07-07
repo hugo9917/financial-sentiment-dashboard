@@ -1,3 +1,4 @@
+/* global vi */
 import '@testing-library/jest-dom'
 
 // Mock fetch globally
