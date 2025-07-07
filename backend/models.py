@@ -1,30 +1,37 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, Boolean
+import os
+from datetime import datetime
+
+from sqlalchemy import (Boolean, Column, DateTime, Float, Integer, String,
+                        Text, create_engine)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime
-import os
 
 # Configuración de la base de datos
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'postgres'),
-    'database': os.getenv('DB_NAME', 'financial_sentiment'),
-    'user': os.getenv('DB_USER', 'postgres'),
-    'password': os.getenv('DB_PASSWORD', 'password'),
-    'port': int(os.getenv('DB_PORT', '5432'))
+    "host": os.getenv("DB_HOST", "postgres"),
+    "database": os.getenv("DB_NAME", "financial_sentiment"),
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD", "password"),
+    "port": int(os.getenv("DB_PORT", "5432")),
 }
 
 # Crear engine de SQLAlchemy
-DATABASE_URL = f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+DATABASE_URL = (
+    f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}"
+    f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
+)
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base para los modelos
 Base = declarative_base()
 
+
 class FinancialSentimentCorrelation(Base):
     """Modelo para la tabla de correlación financiera-sentimiento"""
+
     __tablename__ = "financial_sentiment_correlation"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     hour = Column(DateTime, nullable=False, index=True)
     symbol = Column(String(10), nullable=True, index=True)
@@ -43,10 +50,12 @@ class FinancialSentimentCorrelation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
 class NewsWithSentiment(Base):
     """Modelo para la tabla de noticias con sentimiento"""
+
     __tablename__ = "news_with_sentiment"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     title = Column(Text, nullable=False)
     description = Column(Text, nullable=True)
@@ -59,10 +68,12 @@ class NewsWithSentiment(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
 class StockPrices(Base):
     """Modelo para la tabla de precios de acciones"""
+
     __tablename__ = "stock_prices"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     symbol = Column(String(10), nullable=False, index=True)
     timestamp = Column(DateTime, nullable=False, index=True)
@@ -73,10 +84,12 @@ class StockPrices(Base):
     volume = Column(Integer, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
 class User(Base):
     """Modelo para la tabla de usuarios"""
+
     __tablename__ = "users"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     email = Column(String(100), unique=True, nullable=False)
@@ -87,6 +100,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+
 # Función para obtener la sesión de la base de datos
 def get_db():
     db = SessionLocal()
@@ -95,10 +109,12 @@ def get_db():
     finally:
         db.close()
 
+
 # Función para crear todas las tablas
 def create_tables():
     Base.metadata.create_all(bind=engine)
 
+
 # Función para obtener metadata para Alembic
 def get_metadata():
-    return Base.metadata 
+    return Base.metadata
