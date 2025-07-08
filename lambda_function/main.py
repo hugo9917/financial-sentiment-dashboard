@@ -2,6 +2,7 @@ import json
 import base64
 from textblob import TextBlob
 
+
 def lambda_handler(event, context):
     results = []
     for record in event.get("Records", []):
@@ -15,4 +16,4 @@ def lambda_handler(event, context):
         results.append(data)
     # Aquí podrías guardar en S3, Redshift, etc.
     print("Processed records:", results)
-    return {"statusCode": 200, "body": json.dumps("Processed")} 
+    return {"statusCode": 200, "body": json.dumps("Processed")}
