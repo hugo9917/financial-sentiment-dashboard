@@ -16,8 +16,12 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from auth import (authenticate_user, create_access_token,
-                  get_current_active_user, require_role)
+from auth import (
+    authenticate_user,
+    create_access_token,
+    get_current_active_user,
+    require_role,
+)
 from rate_limiting_middleware import create_rate_limiting_middleware
 
 # Configurar logging estructurado
