@@ -1080,7 +1080,7 @@ async def get_sentiment_summary_by_symbol(hours: int = 24):
         GROUP BY symbol
         ORDER BY news_count DESC
         """
-        df = pd.read_sql_query(query, conn, params=[hours])
+        df = pd.read_sql_query(query, conn, params=[hours]) # type: ign
         conn.close()
         return {
             "summary": df.to_dict("records"),
@@ -1180,4 +1180,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
