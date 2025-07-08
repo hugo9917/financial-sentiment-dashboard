@@ -8,14 +8,13 @@ import time
 from typing import Dict
 
 from fastapi import HTTPException, Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-
 from rate_limiting_config import (
     get_user_rate_limit,
     is_ip_blacklisted,
     is_ip_whitelisted,
 )
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 logger = logging.getLogger(__name__)
 
