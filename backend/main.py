@@ -9,16 +9,19 @@ from datetime import datetime, timedelta
 import boto3
 import pandas as pd
 import psycopg2
+from auth import (
+    authenticate_user,
+    create_access_token,
+    get_current_active_user,
+    require_role,
+)
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from rate_limiting_middleware import create_rate_limiting_middleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-
-from auth import (authenticate_user, create_access_token,
-                  get_current_active_user, require_role)
-from rate_limiting_middleware import create_rate_limiting_middleware
 
 # Configurar logging estructurado
 logging.basicConfig(
@@ -356,9 +359,8 @@ async def get_metrics(request: Request):
 @limiter.limit("10/minute")  # Máximo 10 requests por minuto
 async def get_rate_limit_status(request: Request):
     """Obtener estado del rate limiting para la IP actual"""
-    from slowapi.util import get_remote_address
-
     from rate_limiting_middleware import AdvancedRateLimiter
+    from slowapi.util import get_remote_address
 
     client_ip = get_remote_address(request)
     advanced_limiter = AdvancedRateLimiter(limiter)
