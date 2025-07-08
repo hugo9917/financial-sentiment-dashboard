@@ -1,202 +1,96 @@
-name: CD - Continuous Deployment
+# ===================== EJEMPLO DE PIPELINE DE CD - NO CONSUME AWS =====================
+# Este workflow está configurado solo como ejemplo/documentación.
+# Todos los pasos que consumen recursos reales de AWS están deshabilitados o comentados.
+# Puedes activarlos solo si realmente quieres hacer deploy en AWS.
+
+name: CD - Continuous Deployment (Example Only)
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
-env:
-  AWS_REGION: us-east-1
-
 jobs:
-  # Deploy Infrastructure with Terraform
   deploy-infrastructure:
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./terraform
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: "1.5.0"
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-
+    # - name: Configure AWS credentials
+    #   uses: aws-actions/configure-aws-credentials@v4
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: us-east-1
     - name: Terraform Init
       run: terraform init
-
-    - name: Terraform Plan
-      id: plan
+    - name: Terraform Plan (safe, no apply)
       run: terraform plan -no-color
-      continue-on-error: true
+    # - name: Terraform Apply (disabled)
+    #   run: terraform apply -auto-approve
 
-    - name: Update Pull Request
-      uses: actions/github-script@v7
-      if: github.event_name == 'pull_request'
-      env:
-        PLAN: "${{ steps.plan.outputs.stdout }}"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Terraform Plan 📝
-          \`\`\`\n
-          ${process.env.PLAN || 'No changes. Infrastructure is up-to-date.'}
-          \`\`\`
-          
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-          
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
+  # deploy-backend:
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-infrastructure
+  #   if: github.ref == 'refs/heads/main'
+  #   defaults:
+  #     run:
+  #       working-directory: ./backend
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #   - name: Configure AWS credentials
+  #     uses: aws-actions/configure-aws-credentials@v4
+  #     with:
+  #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #       aws-region: us-east-1
+  #   - name: Login to Amazon ECR
+  #     id: login-ecr
+  #     uses: aws-actions/amazon-ecr-login@v2
+  #   - name: Build, tag, and push image to Amazon ECR
+  #     id: build-image
+  #     env:
+  #       ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  #       ECR_REPOSITORY: financial-sentiment-backend
+  #       IMAGE_TAG: ${{ github.sha }}
+  #     run: |
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+  #       docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+  #       docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+  #       echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+  #   - name: Deploy to App Runner (disabled)
+  #     run: echo "Deploy step disabled in example pipeline."
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main'
-      run: terraform apply -auto-approve
-
-    - name: Get Terraform outputs
-      if: github.ref == 'refs/heads/main'
-      run: |
-        echo "REDSHIFT_ENDPOINT=$(terraform output -raw redshift_cluster_endpoint)" >> $GITHUB_ENV
-        echo "S3_BUCKET=$(terraform output -raw s3_bucket_name)" >> $GITHUB_ENV
-        echo "KINESIS_STREAM=$(terraform output -raw kinesis_stream_name)" >> $GITHUB_ENV
-
-  # Deploy Backend to AWS App Runner
-  deploy-backend:
-    runs-on: ubuntu-latest
-    needs: deploy-infrastructure
-    if: github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: ./backend
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
-
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      env:
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: financial-sentiment-backend
-        IMAGE_TAG: ${{ github.sha }}
-      run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-    - name: Deploy to App Runner
-      run: |
-        aws apprunner create-service \
-          --service-name financial-sentiment-backend \
-          --source-configuration '{
-            "AuthenticationConfiguration": {
-              "AccessRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/AppRunnerECRAccessRole"
-            },
-            "ImageRepository": {
-              "ImageIdentifier": "${{ steps.build-image.outputs.image }}",
-              "ImageRepositoryType": "ECR",
-              "ImageConfiguration": {
-                "Port": "8000",
-                "RuntimeEnvironmentVariables": {
-                  "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
-                  "ALPHA_VANTAGE_API_KEY": "${{ secrets.ALPHA_VANTAGE_API_KEY }}",
-                  "REDSHIFT_ENDPOINT": "${{ needs.deploy-infrastructure.outputs.REDSHIFT_ENDPOINT }}",
-                  "S3_BUCKET": "${{ needs.deploy-infrastructure.outputs.S3_BUCKET }}",
-                  "KINESIS_STREAM": "${{ needs.deploy-infrastructure.outputs.KINESIS_STREAM }}"
-                }
-              }
-            }
-          }' \
-          --instance-configuration '{
-            "Cpu": "1 vCPU",
-            "Memory": "2 GB"
-          }' \
-          --region ${{ env.AWS_REGION }} || true
-
-        # Update existing service if it exists
-        aws apprunner update-service \
-          --service-arn $(aws apprunner list-services --query 'ServiceSummaryList[?ServiceName==`financial-sentiment-backend`].ServiceArn' --output text) \
-          --source-configuration '{
-            "AuthenticationConfiguration": {
-              "AccessRoleArn": "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/AppRunnerECRAccessRole"
-            },
-            "ImageRepository": {
-              "ImageIdentifier": "${{ steps.build-image.outputs.image }}",
-              "ImageRepositoryType": "ECR",
-              "ImageConfiguration": {
-                "Port": "8000",
-                "RuntimeEnvironmentVariables": {
-                  "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
-                  "ALPHA_VANTAGE_API_KEY": "${{ secrets.ALPHA_VANTAGE_API_KEY }}",
-                  "REDSHIFT_ENDPOINT": "${{ needs.deploy-infrastructure.outputs.REDSHIFT_ENDPOINT }}",
-                  "S3_BUCKET": "${{ needs.deploy-infrastructure.outputs.S3_BUCKET }}",
-                  "KINESIS_STREAM": "${{ needs.deploy-infrastructure.outputs.KINESIS_STREAM }}"
-                }
-              }
-            }
-          }' || true
-
-  # Deploy Frontend to Vercel
-  deploy-frontend:
-    runs-on: ubuntu-latest
-    needs: deploy-backend
-    if: github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: ./frontend
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Build project
-      run: npm run build
-      env:
-        VITE_API_URL: ${{ secrets.VITE_API_URL }}
-
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./
-        vercel-args: '--prod'
+  # deploy-frontend:
+  #   runs-on: ubuntu-latest
+  #   needs: deploy-backend
+  #   if: github.ref == 'refs/heads/main'
+  #   defaults:
+  #     run:
+  #       working-directory: ./frontend
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
+  #   - name: Install dependencies
+  #     run: npm ci
+  #   - name: Build project
+  #     run: npm run build
+  #     env:
+  #       VITE_API_URL: ${{ secrets.VITE_API_URL }}
+  #   - name: Deploy to Vercel (disabled)
+  #     run: echo "Deploy step disabled in example pipeline."
 
   # Deploy DBT Models
   deploy-dbt:
