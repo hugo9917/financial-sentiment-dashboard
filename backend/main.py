@@ -963,9 +963,12 @@ async def get_dashboard_stats(request: Request, hours: int = 8760):
 
         # Debug adicional: verificar el tipo de datos
         if stats_row:
-            total_records, overall_sentiment, avg_stock_price, latest_data_time = (
-                stats_row
-            )
+            (
+                total_records,
+                overall_sentiment,
+                avg_stock_price,
+                latest_data_time,
+            ) = stats_row
             logger.info(
                 f"Parsed values - total_records: {total_records} "
                 f"(type: {type(total_records)})"
