@@ -76,9 +76,9 @@ describe('Dashboard', () => {
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByTestId('dashboard-total-records')).toHaveTextContent('1.422'); // Total records
-      expect(screen.getByTestId('dashboard-overall-sentiment')).toHaveTextContent('-0.070'); // Overall sentiment
-      expect(screen.getByTestId('dashboard-avg-price')).toHaveTextContent('$298.75'); // Avg stock price
+      expect(screen.getByTestId('dashboard-total-records').textContent).toMatch(/^1[.,]422$/) // Total records
+      expect(screen.getByTestId('dashboard-overall-sentiment')).toHaveTextContent('-0.070') // Overall sentiment
+      expect(screen.getByTestId('dashboard-avg-price')).toHaveTextContent('$298.75') // Avg stock price
     })
   })
 
