@@ -94,7 +94,10 @@ def test_connection():
         print(f"  Puerto: {DB_PORT}")
         print(f"  Base: {DB_NAME}")
         print(f"  Usuario: {DB_USER}")
-        print(f"  Contraseña: {'*' * len(DB_PASSWORD) if DB_PASSWORD else 'No configurada'}")
+        print(
+            f"  Contraseña: "
+            f"{'*' * len(DB_PASSWORD) if DB_PASSWORD else 'No configurada'}"
+        )
         
         # Mostrar más información de debug
         import traceback
@@ -108,7 +111,10 @@ def test_connection():
         print(f"  Puerto: {DB_PORT}")
         print(f"  Base: {DB_NAME}")
         print(f"  Usuario: {DB_USER}")
-        print(f"  Contraseña: {'*' * len(DB_PASSWORD) if DB_PASSWORD else 'No configurada'}")
+        print(
+            f"  Contraseña: "
+            f"{'*' * len(DB_PASSWORD) if DB_PASSWORD else 'No configurada'}"
+        )
         
         # Mostrar más información de debug
         import traceback

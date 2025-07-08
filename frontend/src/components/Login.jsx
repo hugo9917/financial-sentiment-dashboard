@@ -59,7 +59,7 @@ const Login = ({ onLogin, onClose }) => {
     <div className="login-overlay">
       <div className="login-modal">
         <div className="login-header">
-          <h2>Iniciar Sesión</h2>
+          <h2 data-testid="login-title">Iniciar Sesión</h2>
           <button className="close-button" onClick={onClose}>
             ×
           </button>
@@ -102,12 +102,13 @@ const Login = ({ onLogin, onClose }) => {
             type="submit" 
             className="login-button"
             disabled={loading}
+            data-testid="login-submit"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </button>
         </form>
 
-        <div className="login-info">
+        <div className="login-info" data-testid="login-info">
           <p><strong>Admin:</strong> admin / [Check environment variables]</p>
           <p><strong>User:</strong> user / [Check environment variables]</p>
         </div>

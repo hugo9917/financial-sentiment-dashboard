@@ -162,21 +162,21 @@ const Dashboard = () => {
         <div className="stats-overview">
           <div className="stat-card">
             <h3>Total de Registros</h3>
-            <p className="stat-value">{stats.general_stats.total_records?.toLocaleString()}</p>
+            <p className="stat-value" data-testid="dashboard-total-records">{stats.general_stats.total_records?.toLocaleString()}</p>
           </div>
           <div className="stat-card">
             <h3>Sentimiento General</h3>
-            <p className={`stat-value ${stats.general_stats.overall_sentiment > 0 ? 'positive' : 'negative'}`}>
+            <p className={`stat-value ${stats.general_stats.overall_sentiment > 0 ? 'positive' : 'negative'}`} data-testid="dashboard-overall-sentiment">
               {stats.general_stats.overall_sentiment?.toFixed(3)}
             </p>
           </div>
           <div className="stat-card">
             <h3>Precio Promedio</h3>
-            <p className="stat-value">${stats.general_stats.avg_stock_price?.toFixed(2)}</p>
+            <p className="stat-value" data-testid="dashboard-avg-price">${stats.general_stats.avg_stock_price?.toFixed(2)}</p>
           </div>
           <div className="stat-card">
             <h3>Última Actualización</h3>
-            <p className="stat-value">
+            <p className="stat-value" data-testid="dashboard-latest-update">
               {stats.general_stats.latest_data_time 
                 ? new Date(stats.general_stats.latest_data_time).toLocaleString('es-ES')
                 : 'N/A'

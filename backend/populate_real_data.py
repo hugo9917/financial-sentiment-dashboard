@@ -264,9 +264,7 @@ def populate_database():
         if news_items:
             inserted_news = insert_news_to_db(news_items, conn)
             total_news += inserted_news
-            logger.info(
-                f"✅ Insertadas {inserted_news} noticias para {symbol}"
-            )
+            logger.info(f"✅ Insertadas {inserted_news} noticias para {symbol}")
 
         # Obtener precios
         price_items = fetch_yahoo_prices(symbol)

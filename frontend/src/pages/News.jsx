@@ -159,7 +159,7 @@ const News = () => {
   return (
     <div className="news-page">
       <div className="news-header">
-        <h1>Noticias Financieras</h1>
+        <h1 data-testid="news-title">Noticias Financieras</h1>
         <p>Análisis de sentimiento de las últimas noticias del mercado</p>
       </div>
 
@@ -228,11 +228,11 @@ const News = () => {
       <div className="news-stats">
         <div className="stat-card">
           <h3>Total de Noticias</h3>
-          <p className="stat-value">{filteredNews.length}</p>
+          <p className="stat-value" data-testid="news-total">{filteredNews.length}</p>
         </div>
         <div className="stat-card">
           <h3>Sentimiento Promedio</h3>
-          <p className="stat-value">
+          <p className="stat-value" data-testid="news-avg-sentiment">
             {filteredNews.length > 0 
               ? (filteredNews.reduce((sum, item) => sum + (item.sentiment_score || 0), 0) / filteredNews.length).toFixed(3)
               : '0.000'
@@ -241,7 +241,7 @@ const News = () => {
         </div>
         <div className="stat-card">
           <h3>Fuentes Únicas</h3>
-          <p className="stat-value">{sources.length}</p>
+          <p className="stat-value" data-testid="news-unique-sources">{sources.length}</p>
         </div>
       </div>
 

@@ -18,9 +18,22 @@ describe('Dashboard', () => {
     vi.clearAllMocks()
   })
 
-  it('renders dashboard title', () => {
+  it('renders dashboard title', async () => {
+    global.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ general_stats: {}, sentiment_distribution: [] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ timeline: [] })
+      })
+
     render(<Dashboard />)
-    expect(screen.getByText(/Financial Sentiment Dashboard/i)).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.getByText(/Dashboard Financiero/i)).toBeInTheDocument()
+    })
   })
 
   it('shows loading state initially', () => {
@@ -63,9 +76,9 @@ describe('Dashboard', () => {
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText('1,422')).toBeInTheDocument() // Total records
-      expect(screen.getByText('-0.070')).toBeInTheDocument() // Overall sentiment
-      expect(screen.getByText('$298.75')).toBeInTheDocument() // Avg stock price
+      expect(screen.getByTestId('dashboard-total-records')).toHaveTextContent('1.422'); // Total records
+      expect(screen.getByTestId('dashboard-overall-sentiment')).toHaveTextContent('-0.070'); // Overall sentiment
+      expect(screen.getByTestId('dashboard-avg-price')).toHaveTextContent('$298.75'); // Avg stock price
     })
   })
 
@@ -280,9 +293,9 @@ describe('Dashboard', () => {
     render(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText('0')).toBeInTheDocument() // Total records
-      expect(screen.getByText('0.000')).toBeInTheDocument() // Overall sentiment
-      expect(screen.getByText('$0.00')).toBeInTheDocument() // Avg stock price
+      expect(screen.getByTestId('dashboard-total-records')).toHaveTextContent('0') // Total records
+      expect(screen.getByTestId('dashboard-overall-sentiment')).toHaveTextContent('0.000') // Overall sentiment
+      expect(screen.getByTestId('dashboard-avg-price')).toHaveTextContent('$0.00') // Avg stock price
     })
   })
 }) 

@@ -80,9 +80,7 @@ def test_connection():
 
             for row in cursor.fetchall():
                 symbol, title, sentiment, date = row
-                print(
-                    f"  - {symbol}: {title[:50]}... (sentimiento: {sentiment})"
-                )
+                print(f"  - {symbol}: {title[:50]}... (sentimiento: {sentiment})")
 
         cursor.close()
         conn.close()

@@ -589,9 +589,7 @@ async def get_sentiment_timeline(
 
 
 @app.get("/api/correlation/analysis")
-@limiter.limit(
-    "30/minute"
-)  # Máximo 30 requests por minuto (más restrictivo)
+@limiter.limit("30/minute")  # Máximo 30 requests por minuto (más restrictivo)
 async def get_correlation_analysis(request: Request, hours: int = 24):
     """Obtener análisis de correlación entre sentimiento y precios"""
     try:
@@ -790,8 +788,7 @@ async def get_latest_news(request: Request, limit: int = 10):
                     {
                         "title": "Tech Stocks Face Market Volatility",
                         "description": (
-                            "Technology stocks experienced significant "
-                            "volatility..."
+                            "Technology stocks experienced significant " "volatility..."
                         ),
                         "url": "https://example.com/tech-volatility",
                         "published_at": "2024-01-15T09:15:00",
@@ -877,8 +874,7 @@ async def get_latest_news(request: Request, limit: int = 10):
                 {
                     "title": "Tech Stocks Face Market Volatility",
                     "description": (
-                        "Technology stocks experienced significant "
-                        "volatility..."
+                        "Technology stocks experienced significant " "volatility..."
                     ),
                     "url": "https://example.com/tech-volatility",
                     "published_at": "2024-01-15T09:15:00",
@@ -922,9 +918,7 @@ async def test_database():
 
 
 @app.get("/api/dashboard/stats")
-@limiter.limit(
-    "30/minute"
-)  # Máximo 30 requests por minuto (más restrictivo)
+@limiter.limit("30/minute")  # Máximo 30 requests por minuto (más restrictivo)
 async def get_dashboard_stats(request: Request, hours: int = 8760):
     """Obtener estadísticas generales del dashboard"""
     try:

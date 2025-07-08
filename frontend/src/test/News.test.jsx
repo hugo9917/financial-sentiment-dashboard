@@ -16,9 +16,29 @@ describe('News Component', () => {
     vi.clearAllMocks()
   })
 
-  it('renders news page title', () => {
+  it('renders news page title', async () => {
+    const mockNews = [
+      {
+        title: 'Test News',
+        description: 'Test description',
+        url: 'https://example.com/test',
+        published_at: '2024-01-15T10:30:00',
+        source_name: 'Financial Times',
+        sentiment_score: 0.5,
+        sentiment_subjectivity: 0.45
+      }
+    ]
+
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ news: mockNews, total_count: 1 })
+    })
+
     render(<News />)
-    expect(screen.getByText(/Noticias Financieras/i)).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('news-title')).toBeInTheDocument()
+    })
   })
 
   it('shows loading state initially', () => {
@@ -166,9 +186,9 @@ describe('News Component', () => {
     render(<News />)
 
     await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument() // Total de noticias
-      expect(screen.getByText('0.500')).toBeInTheDocument() // Sentimiento promedio
-      expect(screen.getByText('1')).toBeInTheDocument() // Fuentes únicas
+      expect(screen.getByTestId('news-total')).toHaveTextContent('1'); // Total de noticias
+      expect(screen.getByTestId('news-avg-sentiment')).toHaveTextContent('0.500'); // Sentimiento promedio
+      expect(screen.getByTestId('news-unique-sources')).toHaveTextContent('1'); // Fuentes únicas
     })
   })
 

@@ -120,6 +120,7 @@ const Navbar = ({ apiStatus }) => {
             <button 
               className="login-button"
               onClick={() => setShowLogin(true)}
+              data-testid="navbar-login-button"
             >
               Iniciar Sesión
             </button>

@@ -8,16 +8,16 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import time
 from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-import sys
 from typing import Dict, List, Optional
 
 import boto3
 import psycopg2
 import requests
 import yfinance as yf
+from dateutil.relativedelta import relativedelta
 
 # Configuración
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY")
@@ -249,9 +249,7 @@ class DataIngestionManager:
                     }
                     all_news.append(news_item)
 
-                logger.info(
-                    f"Fetched {len(articles)} news articles for {symbol}"
-                )
+                logger.info(f"Fetched {len(articles)} news articles for {symbol}")
             else:
                 logger.warning(f"No news data found for {symbol}")
 
@@ -296,7 +294,8 @@ class DataIngestionManager:
                             "type": "stock",
                             "symbol": symbol,
                             "timestamp": datetime.fromtimestamp(
-                                timestamp[-1]).isoformat(),
+                                timestamp[-1]
+                            ).isoformat(),
                             "close": float(close_prices[-1]),
                             "high": (
                                 float(high_prices[-1])
@@ -309,9 +308,7 @@ class DataIngestionManager:
                                 else None
                             ),
                             "volume": (
-                                int(volumes[-1])
-                                if volumes and volumes[-1]
-                                else 0
+                                int(volumes[-1]) if volumes and volumes[-1] else 0
                             ),
                             "ingested_at": datetime.utcnow().isoformat(),
                         }
@@ -470,9 +467,7 @@ def fetch_historic_news(symbol, months=6):
 
         if "feed" in data:
             articles = data["feed"]
-            logger.info(
-                f"Found {len(articles)} news articles for {symbol}"
-            )
+            logger.info(f"Found {len(articles)} news articles for {symbol}")
 
             for article in articles:
                 # Alpha Vantage ya proporciona análisis de sentimiento
@@ -504,22 +499,14 @@ def fetch_historic_news(symbol, months=6):
                 }
                 all_news.append(news_item)
         else:
-            logger.warning(
-                f"No news data found for {symbol}"
-            )
+            logger.warning(f"No news data found for {symbol}")
 
     except requests.RequestException as e:
-        logger.error(
-            f"Error fetching news for {symbol}: {e}"
-        )
+        logger.error(f"Error fetching news for {symbol}: {e}")
     except Exception as e:
-        logger.error(
-            f"Unexpected error fetching news for {symbol}: {e}"
-        )
+        logger.error(f"Unexpected error fetching news for {symbol}: {e}")
 
-    logger.info(
-        f"Fetched {len(all_news)} news for {symbol}"
-    )
+    logger.info(f"Fetched {len(all_news)} news for {symbol}")
     return all_news
 
 
@@ -545,9 +532,7 @@ def fetch_yahoo_prices(symbol, days=30):
     end = datetime.now()
     start = end - timedelta(days=days)
     df = yf.download(
-        symbol,
-        start=start.strftime("%Y-%m-%d"),
-        end=end.strftime("%Y-%m-%d")
+        symbol, start=start.strftime("%Y-%m-%d"), end=end.strftime("%Y-%m-%d")
     )
     prices = []
     for date, row in df.iterrows():
@@ -570,8 +555,7 @@ async def main():
     # Eliminar todas las referencias a 'console' y 'NEWS_API_KEY'
     # Validate configuration
     if not ALPHA_VANTAGE_API_KEY:
-        logger.error(
-        )
+        logger.error()
         return
 
     if not KINESIS_STREAM_NAME:

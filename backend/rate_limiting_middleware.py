@@ -119,9 +119,7 @@ class AdvancedRateLimiter:
             minutes: Minutos de bloqueo
         """
         self.blocked_ips[client_ip] = time.time() + (minutes * 60)
-        logger.warning(
-            f"Temporarily blocked IP {client_ip} for {minutes} minutes"
-        )
+        logger.warning(f"Temporarily blocked IP {client_ip} for {minutes} minutes")
 
     def get_rate_limit_info(self, client_ip: str) -> Dict:
         """
@@ -146,8 +144,7 @@ class AdvancedRateLimiter:
             recent_requests = []
 
         is_blocked = (
-            client_ip in self.blocked_ips and
-            time.time() < self.blocked_ips[client_ip]
+            client_ip in self.blocked_ips and time.time() < self.blocked_ips[client_ip]
         )
 
         return {

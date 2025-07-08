@@ -17,17 +17,18 @@ describe('Login Component', () => {
   it('renders login modal', () => {
     render(<Login onLogin={mockOnLogin} onClose={mockOnClose} />)
     
-    expect(screen.getByText('Iniciar Sesión')).toBeInTheDocument()
+    expect(screen.getByTestId('login-title')).toBeInTheDocument()
     expect(screen.getByLabelText('Usuario:')).toBeInTheDocument()
     expect(screen.getByLabelText('Contraseña:')).toBeInTheDocument()
   })
 
   it('shows user credentials info', () => {
     render(<Login onLogin={mockOnLogin} onClose={mockOnClose} />)
-    
-    expect(screen.getByText('Usuarios de prueba:')).toBeInTheDocument()
-    expect(screen.getByText(/Admin: admin/)).toBeInTheDocument()
-    expect(screen.getByText(/Usuario: user/)).toBeInTheDocument()
+    const info = screen.getByTestId('login-info');
+    expect(info).toHaveTextContent('Admin:')
+    expect(info).toHaveTextContent('admin')
+    expect(info).toHaveTextContent('User:')
+    expect(info).toHaveTextContent('user')
   })
 
   it('handles form submission successfully', async () => {
@@ -51,7 +52,7 @@ describe('Login Component', () => {
 
     const usernameInput = screen.getByLabelText('Usuario:')
     const passwordInput = screen.getByLabelText('Contraseña:')
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
 
     fireEvent.change(usernameInput, { target: { value: 'admin' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
@@ -82,7 +83,7 @@ describe('Login Component', () => {
 
     const usernameInput = screen.getByLabelText('Usuario:')
     const passwordInput = screen.getByLabelText('Contraseña:')
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
 
     fireEvent.change(usernameInput, { target: { value: 'wrong' } })
     fireEvent.change(passwordInput, { target: { value: 'wrong' } })
@@ -102,7 +103,7 @@ describe('Login Component', () => {
 
     const usernameInput = screen.getByLabelText('Usuario:')
     const passwordInput = screen.getByLabelText('Contraseña:')
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
 
     fireEvent.change(usernameInput, { target: { value: 'admin' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
@@ -118,7 +119,7 @@ describe('Login Component', () => {
   it('validates required fields', async () => {
     render(<Login onLogin={mockOnLogin} onClose={mockOnClose} />)
 
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
     fireEvent.click(submitButton)
 
     // HTML5 validation should prevent submission
@@ -133,7 +134,7 @@ describe('Login Component', () => {
 
     const usernameInput = screen.getByLabelText('Usuario:')
     const passwordInput = screen.getByLabelText('Contraseña:')
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
 
     fireEvent.change(usernameInput, { target: { value: 'admin' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
@@ -184,7 +185,7 @@ describe('Login Component', () => {
 
     const usernameInput = screen.getByLabelText('Usuario:')
     const passwordInput = screen.getByLabelText('Contraseña:')
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
 
     fireEvent.change(usernameInput, { target: { value: 'admin' } })
     fireEvent.change(passwordInput, { target: { value: 'admin123' } })
@@ -207,7 +208,7 @@ describe('Login Component', () => {
 
     const usernameInput = screen.getByLabelText('Usuario:')
     const passwordInput = screen.getByLabelText('Contraseña:')
-    const submitButton = screen.getByText('Iniciar Sesión')
+    const submitButton = screen.getByTestId('login-submit')
 
     fireEvent.change(usernameInput, { target: { value: 'wrong' } })
     fireEvent.change(passwordInput, { target: { value: 'wrong' } })
